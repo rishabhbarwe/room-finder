@@ -1,0 +1,25 @@
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.log
+venv/
+env/
+instance/
+*.pyc
+
+
+
+# Environment variables
+frontend/.env
+backend/.env
+
+# Coverage reports / test results
+coverage/
+*.cover
+*.log
+*.out
+
+# Database dumps
+*.sql
+*.db
+*.sqlite3

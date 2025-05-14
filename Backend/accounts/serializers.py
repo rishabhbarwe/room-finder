@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import CustomUser
-from .models import Property, RoomSize
+from .models import Property
 from django.contrib.auth import authenticate
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -41,27 +41,37 @@ class LoginSerializer(serializers.Serializer):
         return data
 #-----------------------------------------------------------------------------------------
 
-class RoomSizeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = RoomSize
-        fields = ['room_type', 'size', 'image']
+
 
 
 class PropertySerializer(serializers.ModelSerializer):
-    room_sizes = RoomSizeSerializer(many=True)
+    building_name = serializers.CharField(required=False, allow_blank=True)
+    address = serializers.CharField(required=False, allow_blank=True)
+    city = serializers.CharField(required=False, allow_blank=True)
+    state = serializers.CharField(required=False, allow_blank=True)
+    pincode = serializers.CharField(required=False, allow_blank=True)
+    mobile = serializers.CharField(required=False, allow_blank=True)
+    alt_mobile = serializers.CharField(required=False, allow_blank=True)
+    email = serializers.EmailField(required=False, allow_blank=True)
+    alt_email = serializers.EmailField(required=False, allow_blank=True)
+    rent_from = serializers.IntegerField(required=False)
+    rent_to = serializers.IntegerField(required=False)
+    facilities = serializers.JSONField(required=False)
+
+    room_types = serializers.ListField(child=serializers.DictField())
 
     class Meta:
         model = Property
         fields = [
             'id', 'building_name', 'building_image', 'address', 'city', 'state',
             'pincode', 'mobile', 'alt_mobile', 'email', 'alt_email',
-            'rent_from', 'rent_to', 'facilities', 'room_sizes'
+            'rent_from', 'rent_to', 'facilities', 'room_types'
         ]
 
     def create(self, validated_data):
-        room_sizes_data = validated_data.pop('room_sizes')
+        room_types_data = validated_data.pop('room_types')
         property_instance = Property.objects.create(**validated_data)
-        for room in room_sizes_data:
-            RoomSize.objects.create(property=property_instance, **room)
+        property_instance.room_types = room_types_data
+        property_instance.save()
         return property_instance
 #-----------------------------------------------------------------------------------------

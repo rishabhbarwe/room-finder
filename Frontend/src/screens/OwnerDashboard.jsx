@@ -5,23 +5,20 @@ import { Link, useNavigate } from "react-router-dom";
 import profile from '../assets/dummyProfile.jpeg'
 import logo1 from '../assets/logo.png'
 import OwnerProfileModal from "../utils/OwnerProfileModal";
-import { addProperty, removeProperty } from "../reduxsetup/PropertySlice";
-import { useDispatch,useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
+
+
+import axios from "axios";
 
 const OwnerDashboard = () => {
   
-  const location = useLocation();
-  const name = location.state?.name;  //Name of the user
-  console.log("Name of the user : ",name)
+
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false);
   const [alertMsg, setAlertMsg] = useState("");
   const [showAlert, setShowAlert] = useState(false);
   const [showModal, setShowmodal] = useState(false);
- 
 
-  const [formData, setFormData] = useState({
+     const [formData, setFormData] = useState({
     buildingName: "",
     buildingImage: null,
     address: "",
@@ -32,26 +29,35 @@ const OwnerDashboard = () => {
     altMobile: "",
     email: "",
     altEmail: "",
-    roomSizes: {
-      Room: { selected: false, image: null },
-      "1RK": { selected: false, image: null },
-      "1BHK": { selected: false, image: null },
-      "2BHK": { selected: false, image: null },
-    },
+    rentFrom: "",
+    rentTo: "",
     facilities: {
       WiFi: false,
       RO: false,
       Furnished: false,
-      Laundary : false,
+      Laundry: false,
     },
-    rentFrom: "",
-    rentTo: "",
+    roomTypes: [],
+    roomImages: [],
   });
-  
+
+  function showToast() {
+    const container = document.getElementById("modalToastContainer");
+    if (!container) return;
+
+    const alert = document.createElement("div");
+    alert.className =
+      "alert alert-success text-center p-2 m-2 shadow-sm ";
+    alert.innerText = "Property added successfully!";
+
+    container.appendChild(alert);
+
+    setTimeout(() => alert.remove(), 1000);
+  }
 
   const handleChange = (e) => {
     const { id, value, type, checked } = e.target;
-  
+
     // for checkboxes (like facilities)
     if (type === "checkbox") {
       setFormData((prev) => ({
@@ -71,7 +77,7 @@ const OwnerDashboard = () => {
 
   const handleFileChange = (e) => {
     const { id, files } = e.target;
-  
+
     // For Building Image
     if (id === "buildingImage") {
       setFormData((prev) => ({
@@ -79,89 +85,102 @@ const OwnerDashboard = () => {
         buildingImage: files[0],
       }));
     }
-  
+
     // For Room Size image (e.g., id="image_Room")
-    else if (id.startsWith("image_")) {
-      const sizeType = id.replace("image_", "");
+    else if (id.startsWith("roomImage_")) {
+      const index = id.split("_")[1]; // Getting index from roomImage_1, roomImage_2 etc.
+      const updatedRoomImages = [...formData.roomImages];
+      updatedRoomImages[index] = files[0];
+
       setFormData((prev) => ({
         ...prev,
-        roomSizes: {
-          ...prev.roomSizes,
-          [sizeType]: {
-            ...prev.roomSizes[sizeType],
-            image: files[0],
-          },
-        },
+        roomImages: updatedRoomImages,
       }));
     }
   };
-  
-  // For Room Size checkbox toggle
-  const handleRoomSizeCheckbox = (label) => {
-    setFormData((prev) => ({
-      ...prev,
-      roomSizes: {
-        ...prev.roomSizes,
-        [label]: {
-          ...prev.roomSizes[label],
-          selected: !prev.roomSizes[label].selected,
-        },
-      },
-    }));
+
+  const handleRoomTypeChange = (label, checked) => {
+    setFormData((prev) => {
+      let updatedTypes = checked
+        ? [...prev.roomTypes, label]
+        : prev.roomTypes.filter((type) => type !== label);
+
+      return { ...prev, roomTypes: updatedTypes };
+    });
   };
-  
-  
-  
 
-  function showToast() {
-    const container = document.getElementById("modalToastContainer");
-    if (!container) return;
-  
-    const alert = document.createElement("div");
-    alert.className =
-      "alert alert-success text-center p-2 m-2 shadow-sm ";
-    alert.innerText = "Property added successfully!";
-  
-    container.appendChild(alert);
-  
-    setTimeout(() => alert.remove(), 1000);
-  }
+  const handleRoomImageUpload = (e, label) => {
+    const file = e.target.files[0];
 
-  const dispatch = useDispatch(); // to dispatch actions
+    setFormData((prev) => {
+      const updatedImages = [...prev.roomImages];
 
-  const propertyData = useSelector((state)=>state.property.properties)
-  
-  // useEffect(()=>{
-  //   console.log("propertyData : ",propertyData)
-  // })
-  
+      // either replace or push
+      const index = prev.roomTypes.indexOf(label);
+      if (index >= 0) {
+        updatedImages[index] = file;
+      } else {
+        updatedImages.push(file);
+      }
 
-  const handleSubmit = (e)=>{
-    e.preventDefault();
-    // console.log("Form submitted",formData);
+      return { ...prev, roomImages: updatedImages };
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    console.log("Property form submitted!")
+    // e.preventDefault();
     const isValid = ValidatePropertyDetails(formData, setAlertMsg, setShowAlert);
-    // console.log("Valid : ",isValid)
+    console.log("isValid : ",isValid)
     if (!isValid) return;
+    console.log("isValid : ",isValid)
+    const data = new FormData();
 
-     
-    dispatch(addProperty(formData))
+    // Basic fields
+    data.append("building_name", formData.buildingName);
+    data.append("building_image", formData.buildingImage);
+    data.append("address", formData.address);
+    data.append("city", formData.city);
+    data.append("state", formData.state);
+    data.append("pincode", formData.pincode);
+    data.append("mobile", formData.mobile);
+    data.append("alt_mobile", formData.altMobile);
+    data.append("email", formData.email);
+    data.append("alt_email", formData.altEmail);
+    data.append("rent_from", formData.rentFrom);
+    data.append("rent_to", formData.rentTo);
+
+    // Facilities - convert object to JSON string
+    data.append("facilities", JSON.stringify(formData.facilities));
+
+   formData.roomTypes.forEach((roomType, i) => {
+    const roomData = {
+      type: roomType,
+      image: formData.roomImages[i] || null, // Handle cases where an image might be missing
+    };
+    data.append("room_data[]", JSON.stringify(roomData)); // Send as JSON string
+  });
 
     setLoading(true);
-    
+
+    // Submit form to backend API
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/api/upload-property/", data, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      console.log("Property uploaded:", response.data);
+    } catch (error) {
+      console.error("Error uploading property:", error);
+    }
 
     setTimeout(() => {
       setLoading(false);
-    
-      
     }, 1000);
-    
 
-    setTimeout(()=>{
-       showToast()
-    },1200)
-    
-    
-  }
+    setTimeout(() => {
+      showToast();
+    }, 1200);
+  };
    
 
   return (
@@ -210,12 +229,12 @@ const OwnerDashboard = () => {
               className="form-control"
               id="buildingName"
               placeholder="e.g., Rituraj Apartment"
-              accept="image/*"
+              
               value={formData.buildingName}
-  onChange={handleFileChange}
+  onChange={handleChange}
   required
             />
-            <div className="invalid-feedback">Please provide a valid building name.</div>
+           
           </div>
 
           {/* Building Image */}
@@ -226,9 +245,7 @@ const OwnerDashboard = () => {
               className="form-control"
               id="buildingImage"
               accept="image/*"
-              onChange={(e) =>
-                setFormData({ ...formData, buildingImage: e.target.files[0] })
-              }
+              onChange={handleFileChange}
             />
           </div>
 
@@ -344,25 +361,26 @@ const OwnerDashboard = () => {
           {/* Sizes */}
           <div className="mb-3">
   <label className="h6 text-primary">Select Sizes</label>
-  {["Room", "1RK", "1BHK", "2BHK"].map((label) => (
+  {["1RK", "1BHK", "2BHK"].map((label) => (
     <div className="form-check mt-1 d-flex align-items-center" key={label}>
       <input
         className="form-check-input me-2"
         type="checkbox"
         id={`size_${label}`}
-        checked={formData.roomSizes[label].selected}
-        onChange={() => handleRoomSizeCheckbox(label)}
+        checked={formData.roomTypes.includes(label)}
+        onChange={(e) => handleRoomTypeChange(label, e.target.checked)}
       />
       <label className="form-check-label me-3" htmlFor={`size_${label}`}>
         {label}
       </label>
       <input
         type="file"
+        name="room_images[]"
         className="form-control form-control-sm ms-3"
-        id={`image_${label}`}
+        id={`roomImage_${label}`}
         accept=".jpg,.jpeg,.png"
-        onChange={handleFileChange}
-        disabled={!formData.roomSizes[label].selected}
+         onChange={(e) => handleRoomImageUpload(e, label)}
+        disabled={!formData.roomTypes.includes(label)}
       />
     </div>
   ))}
@@ -432,7 +450,7 @@ const OwnerDashboard = () => {
                 height : 40,
                 borderRadius : '50%'
               }}/>
-              <p className="h6 ms-2 text-white">{name}</p>
+              <p className="h6 ms-2 text-white">Dummy name</p>
             </div>
             <hr className="text-white"/>
             <ul className="nav flex-column">
@@ -609,26 +627,7 @@ const OwnerDashboard = () => {
                   + Add Property
                 </button>
               </div>
-              {
-                propertyData.map((item)=>(<div 
-                 style={{
-                  border : '2px solid black',
-                  width : '40%',
-                  backgroundColor : 'skyblue',
-                  margin : 10,
-                  padding :10
-
-                 }}
-                key={item.buildingName}>
-
-                  <h1>Name : {item.buildingName}</h1>
-                  <h6>Address : {item.address}</h6>
-                  <h6>Mobile : {item.mobile}</h6>
-                  <button onClick={()=>{dispatch(removeProperty(item))}}>Remove</button>
-
-
-                </div>))
-              }
+             
              
             
             </div>

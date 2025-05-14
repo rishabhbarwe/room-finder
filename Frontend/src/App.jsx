@@ -18,7 +18,7 @@ const App = ()=>{
             <Provider store={Store}>
                 <BrowserRouter>
                <Routes>
-                  <Route path='/' element={<Login/>}></Route>
+                  <Route path='/' element={<TenantDashboard/>}></Route>
                   <Route path='/tenant' element={<TenantDashboard/>}></Route>
                   <Route path='/signup' element={<Signup/>}></Route>
                   <Route path='/owner' element={<OwnerDashboard/>}></Route>

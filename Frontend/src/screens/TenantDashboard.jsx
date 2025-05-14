@@ -1,29 +1,60 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import profile from '../assets/dummyProfile.jpeg'
 
 const TenantDashboard = () => {
+
+  const [selectedFilters, setSelectedFilters] = useState([]);
+
+  const handleCheckboxChange = (e) => {
+    const value = e.target.value;
+    if (e.target.checked) {
+      setSelectedFilters((prev) => [...prev, value]);
+    } else {
+      setSelectedFilters((prev) => prev.filter((item) => item !== value));
+    }
+  };
+
+  const handleSearch = () => {
+   
+    console.log('Selected Filters:', selectedFilters);
+  };
+
+  const roomTypes = ['1RK', '1BHK', '2BHK', '3BHK'];
+  const locations = ['Bholaram', 'Bhawarkua', 'Vishnupuri', 'Khandwa Naka'];
+  const rents = ['4000', '5000', '6000'];
  
   return (
     <div className="container-fluid">
   <div className="row min-vh-100">
     {/* Sidebar for md and above */}
-    <div className="col-md-2 d-none d-md-block bg-dark text-white p-3">
-      <h4 className="text-center mb-4">Tenant Panel</h4>
+    <div className="col-md-2 d-none d-md-block bg-dark text-white p-3 vh-100">
+                  <div className="d-flex align-items-center flex-row justify-content-start align-items-center">
+                    <img src={profile} alt=""
+                    style={{
+                      width : 40,
+                      height : 40,
+                      borderRadius : '50%'
+                    }}/>
+                    <p className="h6 ms-2 text-white">Dummy name</p>
+                  </div>
+      <hr />
       <ul className="nav flex-column">
         <li className="nav-item">
-          <a href="#" className="nav-link text-white">My property</a>
+          <a href="#" className="nav-link text-white fs-5 fw-bold">My property</a>
         </li>
         <li className="nav-item">
-          <a href="#" className="nav-link text-white">Payment details</a>
+          <a href="#" className="nav-link text-white fs-5 fw-bold">My profile</a>
         </li>
         <li className="nav-item">
-          <a href="#" className="nav-link text-white">Message</a>
+          <a href="#" className="nav-link text-white fs-5 fw-bold">Message</a>
         </li>
         <li className="nav-item">
-          <a href="#" className="nav-link text-white">Profile setting</a>
+          <a href="#" className="nav-link text-white fs-5 fw-bold">Payment details</a>
         </li>
         <li className="nav-item">
-          <Link to="/" className="nav-link text-white">Logout</Link>
+          <Link to="/" className="nav-link text-white fs-5 fw-bold">Logout</Link>
         </li>
       </ul>
     </div>
@@ -54,7 +85,7 @@ const TenantDashboard = () => {
                             </li>
                             <li class="nav-item my-1">
                               <a class="nav-link" href="#" className="fw-bold text-info text-decoration-none">
-                                Payment details
+                                My profile
                               </a>
                             </li>
                             <li class="nav-item my-1">
@@ -64,7 +95,7 @@ const TenantDashboard = () => {
                             </li>
                             <li class="nav-item my-1">
                               <a class="nav-link" href="#" className="fw-bold text-info text-decoration-none">
-                                Profile setting
+                                Payment details
                               </a>
                             </li>
                             <li class="nav-item my-1">
@@ -105,9 +136,14 @@ const TenantDashboard = () => {
     {/* Main content */}
     <div className="col-md-10">
       {/* Top Navbar */}
-      <nav className="navbar navbar-light bg-light px-4">
+      <nav className="navbar navbar-light px-4 my-2" style={{
+         backgroundColor : '#669bbc',
+  padding : 10,
+  borderRadius : 10
+      }}>
         <span className="navbar-brand mb-0 h1">Welcome, Tenant</span>
       </nav>
+    
 
       {/* Dashboard Content */}
       <div className="container mt-4">
@@ -142,6 +178,96 @@ const TenantDashboard = () => {
             </div>
           </div>
         </div>
+
+
+
+ <div className="row align-items-center my-3" style={{
+  backgroundColor : '#e5e5e5',
+  padding : 10,
+  borderRadius : 10
+ }}>
+      <div className="col-md-9">
+        <div className="dropdown">
+          <button
+            className="btn btn-dark dropdown-toggle py-2 px-4"
+            type="button"
+            data-bs-toggle="dropdown"
+            style={{ fontSize: '1.1rem', minWidth: '100%' }}
+          >
+            Filter by Room Type, Location, Rent
+          </button>
+          <ul
+            className="dropdown-menu p-3"
+            style={{ width: '100%', maxWidth: '400px', fontSize: '1rem' }}
+          >
+            <li><strong>Room Type</strong></li>
+            {roomTypes.map((type) => (
+              <li key={type}>
+                <div className="form-check">
+                  <input
+                    className="form-check-input room-filter"
+                    type="checkbox"
+                    value={type.toLowerCase()}
+                    id={`filter-${type}`}
+                    onChange={handleCheckboxChange}
+                  />
+                  <label className="form-check-label" htmlFor={`filter-${type}`}>
+                    {type}
+                  </label>
+                </div>
+              </li>
+            ))}
+
+            <li className="mt-2"><strong>Location</strong></li>
+            {locations.map((loc) => (
+              <li key={loc}>
+                <div className="form-check">
+                  <input
+                    className="form-check-input room-filter"
+                    type="checkbox"
+                    value={loc.toLowerCase()}
+                    id={`filter-${loc}`}
+                    onChange={handleCheckboxChange}
+                  />
+                  <label className="form-check-label" htmlFor={`filter-${loc}`}>
+                    {loc}
+                  </label>
+                </div>
+              </li>
+            ))}
+
+            <li className="mt-2"><strong>Rent From</strong></li>
+            {rents.map((rent) => (
+              <li key={rent}>
+                <div className="form-check">
+                  <input
+                    className="form-check-input room-filter"
+                    type="checkbox"
+                    value={`rent-${rent}`}
+                    id={`filter-rent-${rent}`}
+                    onChange={handleCheckboxChange}
+                  />
+                  <label className="form-check-label" htmlFor={`filter-rent-${rent}`}>
+                    ₹{rent}+
+                  </label>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <div className="col-md-3 text-end mt-3 mt-md-0">
+        <button
+          className="btn btn-primary px-4 py-2"
+          style={{ fontSize: '1.1rem' }}
+          onClick={handleSearch}
+        >
+          Search
+        </button>
+      </div>
+    </div>
+
 
         <div className="mt-5">
           <h4>Recent Activity</h4>

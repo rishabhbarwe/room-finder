@@ -20,6 +20,8 @@ const Signup = () => {
  
   const navigate = useNavigate();
   const [showPass , setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false); // 1️⃣ Loading state until reposnse is recieved from api
+  const [errorMsg, setErrorMsg] = useState(null); // 1️⃣ For showing error if mail/username already exist
 
 
   const handleImage = ()=>{
@@ -27,7 +29,7 @@ const Signup = () => {
 }
 
   const redirectToLogin = () => {
-        navigate("/");
+        navigate("/login");
   }
 
   const [formData, setFormdata] = useState({
@@ -99,21 +101,49 @@ const Validate = ()=>{
   return valid;
 }
 
+function showToast() {
+    const container = document.getElementById("modalToastContainer");
+    if (!container) return;
+
+    const alert = document.createElement("div");
+    alert.className =
+      "alert alert-info text-center fw-bold p-2 px-3 my-2 shadow-sm ";
+    alert.innerText = errorMsg;
+
+    container.appendChild(alert);
+
+    setTimeout(() => alert.remove(), 5000);
+  }
+
 const handleSubmit = async(e)=>{
     e.preventDefault();
     console.log("Formdata : ",formData);
     if(Validate()){
+      setLoading(true);
 
-      localStorage.setItem('Signupdata',JSON.stringify(formData));
+      // localStorage.setItem('signupdata',JSON.stringify(formData));
       try{
           const response = await register(formData);
           console.log("Hello from Signup")
           console.log('Registered successfully:', response.data);
-          navigate('/', { state: { name: response.data.user.name } });
-      }catch(e){
-          console.error('Registration failed:', error.response?.data || error.message);
-      }
+          navigate('/login');
+      }catch(error){
+         const errorData = error.response?.data;
 
+  if (errorData) {
+    if (errorData.username) {
+      setErrorMsg(errorData.username[0]);  // show username error first
+    } else if (errorData.email) {
+      setErrorMsg("A user with that email id already exists.");     // show email error only if username is okay
+    } else {
+      setErrorMsg("Something went wrong. Please try again.");
+    }
+    showToast(); // or show alert
+  } else {
+    setErrorMsg("Something went wrong. Please try again.");
+  }
+      }
+      setLoading(false); // 3️⃣ Hide spinner
      
     }
 
@@ -122,6 +152,7 @@ const handleSubmit = async(e)=>{
 
   
   return (
+    
     <div className="container-fluid ">
       <div className="row fullScreen">
        
@@ -136,9 +167,11 @@ const handleSubmit = async(e)=>{
           <div className="signupFormDiv">
             
             <h4 className="text-center">Register please!</h4>
+             <div id="modalToastContainer" className="position-absolute top-0 end-1 ms-0 px-3 py-3 mt-0" style={{ zIndex: 1100 }}></div>
             <form>
             <div>
               <label htmlFor="type">Select type</label><br />
+                 
                  <select id="type" name="usertype" value={formData.usertype} onChange={handleChange}>
                    <option value="">--Select user type--</option>
                    <option value="owner">Owner</option>
@@ -182,7 +215,13 @@ const handleSubmit = async(e)=>{
                 }} onClick={handleImage}></img>
               </div>
              
-              <button className="btn btn-primary rounded-4 text-white mx-5 mt-4" onClick={handleSubmit}>Submit</button>
+               <button className="btn btn-primary w-50 align-self-center rounded-3 mx-4 mt-4" onClick={handleSubmit} disabled={loading}>
+                {loading ? (
+        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      ) : (
+        "Signup"
+      )}
+              </button>
               <div className="text-center d-flex justify-content-center align-items-center text-white ms-3 mt-2">Already have an account?<button type="button" class="btn text-danger text-decoration-underline" onClick={redirectToLogin}>Login</button></div>
               
             </form>

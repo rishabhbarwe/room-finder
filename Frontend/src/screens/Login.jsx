@@ -11,6 +11,7 @@ const Login = () => {
   const navigate = useNavigate();
 
   const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false); // 1️⃣ Loading state until reposnse is recieved from api
 
 
   const [formData, setFormData] = useState({
@@ -38,8 +39,8 @@ const Login = () => {
 
 
 
-   let  Userdata = localStorage.getItem('Signupdata');
-    Userdata = JSON.parse(Userdata);
+  //  let  Userdata = localStorage.getItem('Signupdata');
+  //   Userdata = JSON.parse(Userdata);
 
 
 
@@ -97,14 +98,22 @@ const Login = () => {
 
  const handleSubmit = async (e) => {
   e.preventDefault();
+  // 2️⃣ Show spinner
 
   if(validate()){
+      setLoading(true);
       try {
     const response = await login(formData); // Calls Django login API
     console.log("Login success:", response.data);
+    localStorage.setItem("Name", response.data.user.name);
 
     // Save token/user info if needed
-    localStorage.setItem("token", response.data.token);
+     if(formData.remember){
+        localStorage.setItem("token", response.data.token);
+        
+
+      }
+    
 
     if (response.data.usertype === "tenant") {
       navigate("/tenant");
@@ -127,7 +136,9 @@ const Login = () => {
     }
 
     setError(errors);
+  
   }
+    setLoading(false); // 3️⃣ Hide spinner
   }
 };
 
@@ -232,8 +243,12 @@ const Login = () => {
                 <label className="form-check-label" htmlFor="remember">Remember Me</label>
               </div>
 
-              <button className="btn btn-primary w-50 align-self-center rounded-3" onClick={handleSubmit}>
-                Login
+              <button className="btn btn-primary w-50 align-self-center rounded-3" onClick={handleSubmit} disabled={loading}>
+                {loading ? (
+        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      ) : (
+        "Login"
+      )}
               </button>
               <div className="text-center d-flex justify-content-center align-items-center text-white ms-3 mt-2">
                 New here?

@@ -6,12 +6,26 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from .serializers import RegisterSerializer, LoginSerializer, PropertySerializer
+from .models import Property
 
 class RegisterView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+            token, _ = Token.objects.get_or_create(user=user)
+            return Response({
+                "token": token.key,
+               
+            }, status=status.HTTP_201_CREATED)
+        print("Serializer error : ",serializer.errors)
+        return Response(serializer.errors, status=400)
+
+class LoginView(APIView):
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data['user']
             token, _ = Token.objects.get_or_create(user=user)
             return Response({
                 "token": token.key,
@@ -24,16 +38,6 @@ class RegisterView(APIView):
                     "phone" : user.phone
                 }
             }, status=status.HTTP_201_CREATED)
-        print("Serializer error : ",serializer.errors)
-        return Response(serializer.errors, status=400)
-
-class LoginView(APIView):
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.validated_data['user']
-            token, _ = Token.objects.get_or_create(user=user)
-            return Response({"token": token.key}, status=200)
         print("Serializer login error : ",serializer.errors)
         return Response(serializer.errors, status=400)
 
@@ -42,42 +46,56 @@ class PropertyCreateView(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request):
-        data = request.data.copy()  # Copy the incoming request data
-        files = request.FILES  # Get files
+        data_dict = {
+            'building_name': request.data.get('building_name'),
+            'owner_name' : request.data.get('owner_name'),
+            'address': request.data.get('address'),
+            'city': request.data.get('city'),
+            'state': request.data.get('state'),
+            'pincode': request.data.get('pincode'),
+            'mobile': request.data.get('mobile'),
+            'alt_mobile': request.data.get('alt_mobile'),
+            'email': request.data.get('email'),
+            'alt_email': request.data.get('alt_email'),
+            'rent_from': request.data.get('rent_from'),
+            'rent_to': request.data.get('rent_to'),
+            'building_image': request.FILES.get('building_image'),
+        }
 
-        print("DATA KEYS:", data.keys())
-        print("FILES KEYS:", files.keys())
-        print("Received Data:", data)
+        # Handle facilities
+        facilities_str = request.data.get('facilities', '{}')
+        try:
+            data_dict['facilities'] = json.loads(facilities_str)
+        except json.JSONDecodeError:
+            data_dict['facilities'] = {}
 
-        room_types = []  # Initialize room_types to collect room data
-        i = 0
-
-        # Extract room_types data from incoming request
-        while f'room_types[{i}][type]' in data:
-            room = {
-                'type': data.get(f'room_types[{i}][type]'),  # Get the room type
-                'image': files.get(f'room_types[{i}][image]')  # Get the room image if available
-            }
-            room_types.append(room)
-            i += 1
-
-        # Handle facilities data, if available
-        facilities = data.get('facilities')
-        if isinstance(facilities, str):
+        # Handle room_types
+        room_data_list = request.data.getlist('room_data[]')
+        room_types = []
+        for room_str in room_data_list:
             try:
-                data['facilities'] = json.loads(facilities)  # Parse stringified JSON for facilities
-            except:
-                data['facilities'] = {}
+                room_obj = json.loads(room_str)
+                # Here you can fetch the image later if needed
+                room_obj['image'] = None
+                room_types.append(room_obj)
+            except json.JSONDecodeError:
+                continue
 
-        # Create a new Property instance using the serializer
-        serializer = PropertySerializer(data={
-            **data,
-            "room_types": room_types  # Append the room_types data to the property data
-        })
+        data_dict['room_types'] = room_types
 
-        if serializer.is_valid():  # Check if the data is valid (we will disable detailed validation for now)
+        # Validate and save
+        serializer = PropertySerializer(data=data_dict)
+        if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        print("Serializer Errors:", serializer.errors)
+        print("Serializer Errors of property view:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+#get property data based on the owners name
+class PropertyByOwnerView(APIView):
+    def get(self, request, owner_name):
+        properties = Property.objects.filter(owner_name=owner_name)
+        serializer = PropertySerializer(properties, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

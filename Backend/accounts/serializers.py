@@ -46,6 +46,7 @@ class LoginSerializer(serializers.Serializer):
 
 class PropertySerializer(serializers.ModelSerializer):
     building_name = serializers.CharField(required=False, allow_blank=True)
+    owner_name = serializers.CharField(required=False, allow_blank=True)
     address = serializers.CharField(required=False, allow_blank=True)
     city = serializers.CharField(required=False, allow_blank=True)
     state = serializers.CharField(required=False, allow_blank=True)
@@ -54,16 +55,16 @@ class PropertySerializer(serializers.ModelSerializer):
     alt_mobile = serializers.CharField(required=False, allow_blank=True)
     email = serializers.EmailField(required=False, allow_blank=True)
     alt_email = serializers.EmailField(required=False, allow_blank=True)
-    rent_from = serializers.IntegerField(required=False)
-    rent_to = serializers.IntegerField(required=False)
+    rent_from = serializers.DecimalField(required=False,max_digits=10,decimal_places=2)
+    rent_to = serializers.DecimalField(required=False,max_digits=10,decimal_places=2)
     facilities = serializers.JSONField(required=False)
 
-    room_types = serializers.ListField(child=serializers.DictField())
+    room_types = serializers.ListField(child=serializers.JSONField())
 
     class Meta:
         model = Property
         fields = [
-            'id', 'building_name', 'building_image', 'address', 'city', 'state',
+            'id', 'building_name','owner_name', 'building_image', 'address', 'city', 'state',
             'pincode', 'mobile', 'alt_mobile', 'email', 'alt_email',
             'rent_from', 'rent_to', 'facilities', 'room_types'
         ]

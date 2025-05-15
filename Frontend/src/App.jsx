@@ -13,22 +13,39 @@ import { Store } from './reduxsetup/Store';
 
 
 const App = ()=>{
+
+  let token = localStorage.getItem("token");
+  let usertype = null;
+
+  const data = localStorage.getItem("signupdata");
+  if (data) {
+    try {
+      usertype = JSON.parse(data).usertype;
+    } catch (e) {
+      console.error("Invalid JSON in localStorage for signupdata");
+    }
+  }
+
+
       return(
          
             <Provider store={Store}>
                 <BrowserRouter>
                <Routes>
-                  <Route path='/' element={<TenantDashboard/>}></Route>
+                  <Route path='/' element={token ? usertype === "tenant" ? <TenantDashboard/>:<OwnerDashboard/> : <Login/> }></Route>
+                  <Route path='/login' element={<Login/>}></Route>
                   <Route path='/tenant' element={<TenantDashboard/>}></Route>
                   <Route path='/signup' element={<Signup/>}></Route>
                   <Route path='/owner' element={<OwnerDashboard/>}></Route>
 
-                  {/*Owner side bar routes */}
+                  {/*Owner side url bar routes */}
                   <Route path='/teantdetailsowner' element={<TenantDetails/>}></Route>
                   <Route path='/rentoverviewowner' element={<RentOverview/>}></Route>
                   <Route path='/propertiesowner' element={<Myproperties/>}></Route>
-                  {/*end */}
 
+                  {/*end */}
+                  
+                  {/*Tenant side url bar routes */}
                   
 
 

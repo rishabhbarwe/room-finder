@@ -10,6 +10,26 @@ import OwnerProfileModal from "../utils/OwnerProfileModal";
 import axios from "axios";
 
 const OwnerDashboard = () => {
+
+
+
+  const fetchPropertiesByOwner = async (ownerName) => {
+  try {
+    const response = await axios.get(`/api/properties/owner/${ownerName}/`);
+    const data = await response.json();
+    console.log("Get property Api data : ",data); // Your properties
+    setOwnerspropetry(data)
+  } catch (error) {
+    console.error("Error fetching properties:", error);
+  }
+};
+
+
+  const ownerName = localStorage.getItem("Name");
+  console.log("Name : ",ownerName)
+  if (ownerName) {
+    fetchPropertiesByOwner(ownerName);
+  }
   
 
   const navigate = useNavigate()
@@ -18,28 +38,36 @@ const OwnerDashboard = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [showModal, setShowmodal] = useState(false);
 
-     const [formData, setFormData] = useState({
-    buildingName: "",
-    buildingImage: null,
-    address: "",
-    city: "",
-    state: "",
-    pincode: "",
-    mobile: "",
-    altMobile: "",
-    email: "",
-    altEmail: "",
-    rentFrom: "",
-    rentTo: "",
-    facilities: {
-      WiFi: false,
-      RO: false,
-      Furnished: false,
-      Laundry: false,
-    },
-    roomTypes: [],
-    roomImages: [],
-  });
+
+  const initialFormData = {
+  buildingName: "",
+  ownerName: "",
+  buildingImage: null,
+  address: "",
+  city: "",
+  state: "",
+  pincode: "",
+  mobile: "",
+  altMobile: "",
+  email: "",
+  altEmail: "",
+  rentFrom: "",
+  rentTo: "",
+  facilities: {
+    WiFi: false,
+    RO: false,
+    Furnished: false,
+    Laundry: false,
+  },
+  roomTypes: [],
+  roomImages: [],
+};
+
+const [formData, setFormData] = useState(initialFormData);
+const [ownersProperty, setOwnerspropetry] = useState([]);
+
+
+    
 
   function showToast() {
     const container = document.getElementById("modalToastContainer");
@@ -149,6 +177,7 @@ const OwnerDashboard = () => {
     data.append("alt_email", formData.altEmail);
     data.append("rent_from", formData.rentFrom);
     data.append("rent_to", formData.rentTo);
+    data.append("owner_name",formData.ownerName);
 
     // Facilities - convert object to JSON string
     data.append("facilities", JSON.stringify(formData.facilities));
@@ -160,6 +189,8 @@ const OwnerDashboard = () => {
     };
     data.append("room_data[]", JSON.stringify(roomData)); // Send as JSON string
   });
+    
+
 
     setLoading(true);
 
@@ -182,6 +213,18 @@ const OwnerDashboard = () => {
     }, 1200);
   };
    
+  const handleLogout = ()=>{
+    localStorage.clear();
+    navigate('/login')
+  }
+
+
+
+
+
+
+
+
 
   return (
     //  Property Modal form
@@ -222,23 +265,35 @@ const OwnerDashboard = () => {
         <form onSubmit={handleSubmit}>
         
           {/* Building Name */}
-          <div className="mb-3">
-            <label htmlFor="buildingName" className="h6 text-primary">Building Name</label>
-            <input
-              type="text"
-              className="form-control"
-              id="buildingName"
-              placeholder="e.g., Rituraj Apartment"
-              
-              value={formData.buildingName}
+          
+           <div className="row mt-2">
+    <div className="col-md-6">
+      <label htmlFor="buildingName" className="h6 text-primary">Building Name</label>
+      <input
+        type="text"
+        className="form-control"
+        id="buildingName"
+       placeholder="e.g., Rituraj Apartment"
+        value={formData.buildingName}
   onChange={handleChange}
   required
-            />
-           
-          </div>
+      />
+    </div>
+    <div className="col-md-6">
+      <label htmlFor="ownerName" className="h6 text-primary">Owners's Name</label>
+      <input
+        type="text"
+        className="form-control"
+        id="ownerName"
+        placeholder="enter your name"
+        value={formData.ownerName}
+  onChange={handleChange}
+      />
+    </div>
+  </div>
 
           {/* Building Image */}
-          <div className="mb-3">
+          <div className="mb-3 mt-2">
             <label htmlFor="buildingImage" className="h6 text-primary">Building Image</label>
             <input
               type="file"
@@ -421,7 +476,7 @@ const OwnerDashboard = () => {
       </div>
       <div className="modal-footer">
      
-      <button type="button" className="btn btn-secondary" data-dismiss="modal">
+      <button type="button" className="btn btn-secondary" data-dismiss="modal" onClick={()=>{setFormData(initialFormData)}}>
           Close
         </button>
       <button type="submit" className="btn btn-primary" onClick={handleSubmit}>
@@ -446,13 +501,13 @@ const OwnerDashboard = () => {
             <div className="d-flex align-items-center flex-row justify-content-start align-items-center">
               <img src={profile} alt=""
               style={{
-                width : 40,
-                height : 40,
+                width : 42,
+                height : 42,
                 borderRadius : '50%'
               }}/>
-              <p className="h6 ms-2 text-white">Dummy name</p>
+              <p className="h5 ms-2 text-dark">{localStorage.getItem("Name")}</p>
             </div>
-            <hr className="text-white"/>
+            <hr className="text-dark"/>
             <ul className="nav flex-column">
               <li className="nav-item">
                 <a href="#" className="nav-link fw-bold" onClick={(e)=>{e.preventDefault(); navigate('/propertiesowner')}}>
@@ -482,8 +537,10 @@ const OwnerDashboard = () => {
               
             </ul>
             <div className="box h-75 d-flex flex-column justify-content-end align-items-start">
-            <button className="btn btn-danger px-4 mx-1 my-4" onClick={()=>{navigate('/')}}
-         
+            <button className="btn btn-danger px-4 mx-2 fw-bold" onClick={handleLogout}
+             style={{
+              marginBottom : 70
+             }}
             >logout</button>
             </div>
             
@@ -540,7 +597,7 @@ const OwnerDashboard = () => {
                       </a>
                     </li>
                     <li class="nav-item my-1">
-                     <Link to="/" style={{
+                     <Link to="/login" onClick={handleLogout} style={{
                       textDecoration : "none",
                      
                       
@@ -627,6 +684,29 @@ const OwnerDashboard = () => {
                   + Add Property
                 </button>
               </div>
+              {ownersProperty.map((property) => (
+  <div key={property.id} className="card my-3">
+    <img
+      src={property.building_image}
+      className="card-img-top"
+      alt={property.building_name}
+    />
+    <div className="card-body">
+      <h5 className="card-title">{property.building_name}</h5>
+      <p className="card-text">
+        {property.address}, {property.city}, {property.state} - {property.pincode}
+      </p>
+      <p>Rent: ₹{property.rent_from} - ₹{property.rent_to}</p>
+      <p><strong>Room Types:</strong></p>
+      <ul>
+        {property.room_types.map((room, idx) => (
+          <li key={idx}>{room.type}</li>
+        ))}
+      </ul>
+    </div>
+  </div>
+))}
+
              
              
             

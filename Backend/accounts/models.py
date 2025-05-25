@@ -15,7 +15,7 @@ class CustomUser(AbstractUser):
 # models.py
 class Property(models.Model):
     building_name = models.CharField(max_length=255)
-    owner_name = models.CharField(max_length=255)
+    owner_name = models.CharField(max_length=255,default="Unknown")
     building_image = models.ImageField(upload_to='properties/', null=True, blank=True)
     address = models.TextField()
     city =   models.CharField(max_length=100)

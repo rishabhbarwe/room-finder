@@ -55,24 +55,24 @@ class PropertySerializer(serializers.ModelSerializer):
     alt_mobile = serializers.CharField(required=False, allow_blank=True)
     email = serializers.EmailField(required=False, allow_blank=True)
     alt_email = serializers.EmailField(required=False, allow_blank=True)
-    rent_from = serializers.DecimalField(required=False,max_digits=10,decimal_places=2)
-    rent_to = serializers.DecimalField(required=False,max_digits=10,decimal_places=2)
+    rent_from = serializers.DecimalField(required=False, max_digits=10, decimal_places=2)
+    rent_to = serializers.DecimalField(required=False, max_digits=10, decimal_places=2)
     facilities = serializers.JSONField(required=False)
-
     room_types = serializers.ListField(child=serializers.JSONField())
 
     class Meta:
         model = Property
-        fields = [
-            'id', 'building_name','owner_name', 'building_image', 'address', 'city', 'state',
-            'pincode', 'mobile', 'alt_mobile', 'email', 'alt_email',
-            'rent_from', 'rent_to', 'facilities', 'room_types'
-        ]
+        fields = '__all__'
+        read_only_fields = ['owner']  # Important: don't let frontend send this
 
     def create(self, validated_data):
-        room_types_data = validated_data.pop('room_types')
-        property_instance = Property.objects.create(**validated_data)
+        request = self.context.get('request')
+        user = request.user if request else None
+
+        room_types_data = validated_data.pop('room_types', [])
+        property_instance = Property.objects.create(owner=user, **validated_data)
         property_instance.room_types = room_types_data
         property_instance.save()
+
         return property_instance
 #-----------------------------------------------------------------------------------------

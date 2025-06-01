@@ -11,26 +11,32 @@ import axios from "axios";
 
 const OwnerDashboard = () => {
 
+const [gettingOwnersProperty, setgettingOwnersProperty] = useState([]);
 
+const fetchMyProperties = async () => {
+  const token = localStorage.getItem('token');  // get saved token
+  console.log("Token : ",token);
+  if (!token) {
+    console.log("User not logged in");
+    return;
+  }
 
-  const fetchPropertiesByOwner = async (ownerName) => {
   try {
-    const response = await axios.get(`/api/properties/owner/${ownerName}/`);
-    const data = await response.json();
-    console.log("Get property Api data : ",data); // Your properties
-    setOwnerspropetry(data)
+    const response = await axios.get('http://127.0.0.1:8000/api/my-properties/', {
+      headers: {
+        Authorization: `Token ${token}`,
+      },
+    });
+    console.log("Properties:", response.data);
+    setgettingOwnersProperty(response.data);
   } catch (error) {
-    console.error("Error fetching properties:", error);
+    console.error("Failed to fetch properties:", error);
   }
 };
-
-
-  const ownerName = localStorage.getItem("Name");
-  console.log("Name : ",ownerName)
-  if (ownerName) {
-    fetchPropertiesByOwner(ownerName);
-  }
   
+useEffect(() => {
+    fetchMyProperties();
+}, []);
 
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false);
@@ -64,7 +70,7 @@ const OwnerDashboard = () => {
 };
 
 const [formData, setFormData] = useState(initialFormData);
-const [ownersProperty, setOwnerspropetry] = useState([]);
+
 
 
     
@@ -195,10 +201,15 @@ const [ownersProperty, setOwnerspropetry] = useState([]);
     setLoading(true);
 
     // Submit form to backend API
+    const token = localStorage.getItem('token');
+    console.log("Token : ",token)
     try {
       const response = await axios.post("http://127.0.0.1:8000/api/upload-property/", data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+           headers: {
+            'Authorization': `Token ${token}`,  // ✅ Correct placement
+            'Content-Type': 'multipart/form-data'
+            },
+         });
       console.log("Property uploaded:", response.data);
     } catch (error) {
       console.error("Error uploading property:", error);
@@ -684,7 +695,7 @@ const [ownersProperty, setOwnerspropetry] = useState([]);
                   + Add Property
                 </button>
               </div>
-              {ownersProperty.map((property) => (
+              {gettingOwnersProperty.map((property) => (
   <div key={property.id} className="card my-3">
     <img
       src={property.building_image}

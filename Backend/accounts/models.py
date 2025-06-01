@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.conf import settings  
 
 class CustomUser(AbstractUser):
     USER_TYPES = (
@@ -14,6 +15,9 @@ class CustomUser(AbstractUser):
 
 # models.py
 class Property(models.Model):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+
+
     building_name = models.CharField(max_length=255)
     owner_name = models.CharField(max_length=255,default="Unknown")
     building_image = models.ImageField(upload_to='properties/', null=True, blank=True)

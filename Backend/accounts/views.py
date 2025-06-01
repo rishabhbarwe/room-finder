@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from .serializers import RegisterSerializer, LoginSerializer, PropertySerializer
 from .models import Property
+from rest_framework import viewsets, permissions, status
 
 class RegisterView(APIView):
     def post(self, request):
@@ -43,9 +44,13 @@ class LoginView(APIView):
 
 
 class PropertyCreateView(APIView):
+    permission_classes = [permissions.IsAuthenticated] 
     parser_classes = (MultiPartParser, FormParser)
-
+    
+    
     def post(self, request):
+        print("Request user:", request.user, "| Authenticated:", request.user.is_authenticated)
+
         data_dict = {
             'building_name': request.data.get('building_name'),
             'owner_name' : request.data.get('owner_name'),
@@ -84,7 +89,9 @@ class PropertyCreateView(APIView):
         data_dict['room_types'] = room_types
 
         # Validate and save
-        serializer = PropertySerializer(data=data_dict)
+        serializer = PropertySerializer(data=data_dict, context={'request': request})
+
+
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -92,6 +99,19 @@ class PropertyCreateView(APIView):
         print("Serializer Errors of property view:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class MyPropertiesView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+   
+    def get(self, request):
+        print("Usertype : ",request.user.usertype)
+        if request.user.usertype != 'owner':
+            return Response({'detail': 'Only owners can view their properties.'},
+                            status=status.HTTP_403_FORBIDDEN)
+        properties = Property.objects.filter(owner=request.user)
+        serializer = PropertySerializer(properties, many=True)
+       
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 #get property data based on the owners name
 class PropertyByOwnerView(APIView):

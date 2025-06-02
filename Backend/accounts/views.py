@@ -8,8 +8,10 @@ from rest_framework.authtoken.models import Token
 from .serializers import RegisterSerializer, LoginSerializer, PropertySerializer
 from .models import Property
 from rest_framework import viewsets, permissions, status
+from rest_framework.permissions import AllowAny
 
 class RegisterView(APIView):
+    permission_classes = [AllowAny] 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():

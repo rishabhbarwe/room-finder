@@ -25,6 +25,7 @@ class RegisterView(APIView):
         return Response(serializer.errors, status=400)
 
 class LoginView(APIView):
+    permission_classes = [AllowAny] 
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():

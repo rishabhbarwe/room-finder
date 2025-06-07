@@ -106,11 +106,11 @@ const Login = () => {
     const response = await login(formData); // Calls Django login API
     console.log("Login success:", response.data);
     localStorage.setItem("Name", response.data.user.name);
-
+    localStorage.setItem("token", response.data.token);
     // Save token/user info if needed
      if(formData.remember){
-        localStorage.setItem("token", response.data.token);
         
+        localStorage.setItem("token", response.data.token);
 
       }
     

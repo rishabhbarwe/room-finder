@@ -28,6 +28,7 @@ const fetchMyProperties = async () => {
       },
     });
     console.log("Properties:", response.data);
+   
     setgettingOwnersProperty(response.data);
   } catch (error) {
     console.error("Failed to fetch properties:", error);

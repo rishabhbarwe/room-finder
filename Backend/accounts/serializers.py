@@ -60,6 +60,9 @@ class PropertySerializer(serializers.ModelSerializer):
     facilities = serializers.JSONField(required=False)
     room_types = serializers.ListField(child=serializers.JSONField())
 
+
+    building_image = serializers.ImageField(required=False)
+
     class Meta:
         model = Property
         fields = '__all__'
@@ -75,4 +78,10 @@ class PropertySerializer(serializers.ModelSerializer):
         property_instance.save()
 
         return property_instance
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        if instance.building_image and request:
+            representation['building_image'] = request.build_absolute_uri(instance.building_image.url)
+        return representation
 #-----------------------------------------------------------------------------------------

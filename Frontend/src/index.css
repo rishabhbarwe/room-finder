@@ -1,4 +1,6 @@
 /* Signup page css*/
+
+
 @import url('https://fonts.googleapis.com/css2?family=Delius+Swash+Caps&family=Pacifico&display=swap');
 .signupFormDiv {
   margin: 10px auto;
@@ -9,6 +11,10 @@
   border-radius: 15px;
   background-color: rgba(0, 0, 0, 0.9);
   
+}
+body{
+  margin: 0;
+  padding: 0;
 }
 
 hr{

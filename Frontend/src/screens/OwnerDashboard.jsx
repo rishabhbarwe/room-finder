@@ -12,8 +12,12 @@ import axios from "axios";
 const OwnerDashboard = () => {
 
 const [gettingOwnersProperty, setgettingOwnersProperty] = useState([]);
+const [loadingProperty, setLoadingProperty] = useState(true);  // initially true
 
-const fetchMyProperties = async () => {
+
+  
+useEffect(() => {
+  const fetchMyProperties = async () => {
   const token = localStorage.getItem('token');  // get saved token
   console.log("Token : ",token);
   if (!token) {
@@ -33,9 +37,10 @@ const fetchMyProperties = async () => {
   } catch (error) {
     console.error("Failed to fetch properties:", error);
   }
+  finally {
+      setLoadingProperty(false);  // done loading
+    }
 };
-  
-useEffect(() => {
     fetchMyProperties();
 }, []);
 
@@ -547,7 +552,7 @@ const facilityNameMap = {
             <hr className="text-dark"/>
             <ul className="nav flex-column">
               <li className="nav-item">
-                <a href="#" className="nav-link fw-bold" onClick={(e)=>{e.preventDefault(); navigate('/propertiesowner')}}>
+                <a href="#" className="nav-link fw-bold" onClick={(e)=>{e.preventDefault(); navigate('/propertiesowner',{state:{"data" : gettingOwnersProperty}})}}>
                   My Properties
                 </a>
               </li>
@@ -668,7 +673,7 @@ const facilityNameMap = {
                     borderBottomLeftRadius : 10,
                     borderBottomRightRadius : 10
                   }}> 
-                  <p className="card-text display-6">3</p>
+                  <p className="card-text display-6">{gettingOwnersProperty.length}</p>
                   </div>
                 </div>
                 <div className="col-md-4  px-4 my-3">
@@ -721,15 +726,25 @@ const facilityNameMap = {
                   + Add Property
                 </button>
               </div>
-             {gettingOwnersProperty.map((property) => (
-  <div key={property.id} className="card my-3" style={{ backgroundColor: "#e7c6ff" }}>
+             {loadingProperty ? (
+  <div className="d-flex justify-content-center align-items-center" style={{ height: "100px" }}>
+    <span className="text-primary fw-bold  me-2"><span className="text-danger">Wait</span> getting properties</span>
+    <div className="spinner-grow text-danger" role="status">
+      
+      <span className="visually-hidden">Loading...</span>
+    </div>
+  </div>
+): (gettingOwnersProperty.slice(-2).map((property) => (
+  <div key={property.id} className="card my-3" style={{ backgroundColor: "#eee4e1" }}>
     <div className="row g-0"> {/* Bootstrap row with no gutters */}
       
       {/* LEFT SIDE - Property Info */}
       <div className="col-md-6 p-3">
         <div className="card-body">
-          <h5 className="card-title text-danger">{property.building_name}</h5>
-          <em className="card-text my-1">
+          <h5 className="card-title" style={{
+            color : "#14213d"
+          }}>{property.building_name}</h5>
+          <em className="card-text my-1 text-secondary">
             {property.address}, {property.city}, {property.state} - {property.pincode}
           </em>
           <p><strong>Rent:</strong> ₹{property.rent_from} - ₹{property.rent_to}</p>
@@ -770,7 +785,14 @@ const facilityNameMap = {
 </div>
     </div>
   </div>
-))}
+)))}
+
+  <div className="col-sm-2 mb-4" style={{
+    marginTop : -10
+  }}>
+    <button className="btn btn-success fw-bold" onClick={()=>navigate('/propertiesowner',{state:{"data" : gettingOwnersProperty}})}>see more properties...</button>
+  </div>
+
 
 
              

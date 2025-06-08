@@ -73,6 +73,16 @@ useEffect(() => {
 const [formData, setFormData] = useState(initialFormData);
 
 
+const facilityNameMap = {
+  facility0: "RO",
+  facility1: "Furnished",
+  facility2: "Laundry",
+  facility3: "WiFi",
+  // add other mappings if needed
+};
+
+
+
 
     
 
@@ -456,18 +466,33 @@ const [formData, setFormData] = useState(initialFormData);
 
           {/* Facilities */}
           <div className="mb-3">
-            <label className="h6 text-primary">Facilities</label>
-            <div className="d-flex flex-wrap">
-              {["WiFi", "RO", "Furnished","Laundary"].map((facility, index) => (
-                <div className="form-check form-check-inline me-3" key={index}>
-                  <input className="form-check-input" type="checkbox" id={`facility${index}`}  checked={formData.facilities[index]} onChange={handleChange}/>
-                  <label className="form-check-label" htmlFor={`facility${index}`}>
-                    {facility}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
+  <label className="h6 text-primary">Facilities</label>
+  <div className="d-flex flex-wrap">
+    {["WiFi", "RO", "Furnished", "Laundary"].map((facility, index) => (
+      <div className="form-check form-check-inline me-3" key={index}>
+        <input
+          className="form-check-input"
+          type="checkbox"
+          id={`facility-${facility}`}
+          checked={formData.facilities[facility]}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              facilities: {
+                ...formData.facilities,
+                [facility]: e.target.checked,
+              },
+            })
+          }
+        />
+        <label className="form-check-label" htmlFor={`facility-${facility}`}>
+          {facility}
+        </label>
+      </div>
+    ))}
+  </div>
+</div>
+
 
           {/* Rent */}
           <div className="mb-3 row">
@@ -696,28 +721,57 @@ const [formData, setFormData] = useState(initialFormData);
                   + Add Property
                 </button>
               </div>
-              {gettingOwnersProperty.map((property) => (
-  <div key={property.id} className="card my-3">
-    <img
-      src={property.building_image}
-      className="card-img-top"
-      alt={property.building_name}
-    />
-    <div className="card-body">
-      <h5 className="card-title">{property.building_name}</h5>
-      <p className="card-text">
-        {property.address}, {property.city}, {property.state} - {property.pincode}
-      </p>
-      <p>Rent: ₹{property.rent_from} - ₹{property.rent_to}</p>
-      <p><strong>Room Types:</strong></p>
-      <ul>
-        {property.room_types.map((room, idx) => (
-          <li key={idx}>{room.type}</li>
-        ))}
-      </ul>
+             {gettingOwnersProperty.map((property) => (
+  <div key={property.id} className="card my-3" style={{ backgroundColor: "#e7c6ff" }}>
+    <div className="row g-0"> {/* Bootstrap row with no gutters */}
+      
+      {/* LEFT SIDE - Property Info */}
+      <div className="col-md-6 p-3">
+        <div className="card-body">
+          <h5 className="card-title text-danger">{property.building_name}</h5>
+          <em className="card-text my-1">
+            {property.address}, {property.city}, {property.state} - {property.pincode}
+          </em>
+          <p><strong>Rent:</strong> ₹{property.rent_from} - ₹{property.rent_to}</p>
+
+          <div className="row">
+            <div className="col-sm-6">
+              <p><strong>Room Types:</strong></p>
+              <ul>
+                {property.room_types.map((room, idx) => (
+                  <li key={idx}>{room.type}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="col-sm-6">
+              <p><strong>Facilities:</strong></p>
+              <ul>
+                {Object.entries(property.facilities)
+                  .filter(([facilityKey, isAvailable]) => isAvailable)
+                  .map(([facilityKey]) => (
+                    <li key={facilityKey}>
+                      {facilityNameMap[facilityKey] || facilityKey}
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* RIGHT SIDE - Image */}
+      <div className="col-md-6 d-flex justify-content-end align-items-center pe-5">
+  <img
+    src={`http://localhost:8000${property.building_image}`}
+    alt={property.building_name}
+    style={{ width: "300px", height: "250px", objectFit: "cover", borderRadius: "8px",border : "4px solid white" }}
+  />
+</div>
     </div>
   </div>
 ))}
+
 
              
              

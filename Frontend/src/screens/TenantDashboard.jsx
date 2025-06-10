@@ -9,9 +9,11 @@ import email from '../assets/email.png'
 const TenantDashboard = () => {
 
   const [selectedFilters, setSelectedFilters] = useState([]);
+  const [sendrequest, setSendrequest] = useState(false)
 
   const [gettingOwnersProperty, setgettingOwnersProperty] = useState([]);
   const [loadingProperty, setLoadingProperty] = useState(true);  // initially true
+  const [requestedProperties, setRequestedProperties] = useState({});
 
   const facilityNameMap = {
   facility0: "RO",
@@ -21,29 +23,44 @@ const TenantDashboard = () => {
   // add other mappings if needed
 };
 
-  const handleSendRequest = async (propertyId) => {
+ const handleSendRequest = async (propertyId) => {
+  const token = localStorage.getItem('tenant_token');  // get saved token
+  console.log("Token:", token);
+
+  setRequestedProperties((prev) => ({
+    ...prev,
+    [propertyId]: !prev[propertyId],  // toggle state for this property
+  }));
+
+  if (!token) {
+    alert("You need to log in first!");
+    return;
+  }
+
   try {
-    const response = await fetch("http://localhost:8000/api/property-request/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token")}`, // if using JWT auth
-      },
-      body: JSON.stringify({
-        property: propertyId,
-      }),
-    });
+    const response = await axios.post(
+      "http://localhost:8000/api/property-request/",
+      {  property_id: propertyId },
+      {
+        headers: {
+          Authorization: `Token ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    const data = await response.json();
-
-    if (response.ok) {
-      alert("Request sent successfully!");
-    } else {
-      alert("Error: " + (data.detail || data.message || "Unknown error"));
-    }
+    alert("Request sent successfully!");
+    console.log("Response:", response.data);
   } catch (error) {
-    console.error("Send request error:", error);
-    alert("Something went wrong.");
+    console.error("Error sending request:", error);
+
+    if (error.response) {
+      // Backend responded with an error
+      const msg = error.response.data.detail || error.response.data.message || "Something went wrong";
+      alert("Error: " + msg);
+    } else {
+      alert("Network error or server is down.");
+    }
   }
 };
 
@@ -58,18 +75,54 @@ const TenantDashboard = () => {
     }
   };
 
-  const handleSearch = () => {
-   
-    console.log('Selected Filters:', selectedFilters);
-  };
+  const handleSearch = async () => {
+  const selected = [...filters]; // your state array
+  const { roomTypes, locations, rent } = parseFilters(selected);
+
+  try {
+    const response = await axios.get("http://localhost:8000/api/properties/", {
+      params: {
+        room_types: roomTypes.join(","),
+        locations: locations.join(","),
+        min_rent: rent || "",
+      },
+    });
+
+    console.log(response.data); // filtered properties
+    setProperties(response.data); // update state
+  } catch (error) {
+    console.error("Error fetching filtered properties:", error);
+  }
+};
+
 
   const roomTypes = ['1RK', '1BHK', '2BHK', '3BHK'];
   const locations = ['Bholaram', 'Bhawarkua', 'Vishnupuri', 'Khandwa Naka'];
   const rents = ['4000', '5000', '6000'];
 
+
+  const parseFilters = (filtersArray) => {
+  const roomTypes = [];
+  const locations = [];
+  let rent = null;
+
+  filtersArray.forEach((item) => {
+    if (item.startsWith("rent-")) {
+      rent = item.split("-")[1]; // 4000
+    } else if (["1bhk", "2bhk", "3bhk", "1rk"].includes(item)) {
+      roomTypes.push(item);
+    } else {
+      locations.push(item);
+    }
+  });
+
+  return { roomTypes, locations, rent };
+};
+
+
   useEffect(() => {
   const fetchAllProperties = async () => {
-    const token = localStorage.getItem('token');  // get saved token
+    const token = localStorage.getItem('tenant_token');  // get saved token
   console.log("Token : ",token);
   if (!token) {
     console.log("User not logged in");
@@ -390,7 +443,12 @@ const TenantDashboard = () => {
               </ul>
             </div>
           </div>
-          <button className="btn btn-warning" onClick={() => handleSendRequest(property.id)}>Send Request</button>
+          {!requestedProperties[property.id] ? (<button className="btn btn-warning" onClick={() =>{ handleSendRequest(property.id)
+           setSendrequest(true)}}>Send Request</button>)
+             : (<button className="btn btn-warning" onClick={() => handleSendRequest(property.id)}>Unsend Request</button>)}
+            <div> {requestedProperties[property.id] && (
+              <em className="text-danger">You requested this property</em>
+            )}</div>
         </div>
       </div>
 

@@ -22,7 +22,7 @@ useEffect(() => {
       try {
         const response = await axios.get("http://localhost:8000/api/owner/requests/", {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`
+            Authorization: `Token ${localStorage.getItem("owner_token")}`
           }
         });
         setRequests(response.data);
@@ -41,7 +41,7 @@ useEffect(() => {
       await axios.patch(
         `http://localhost:8000/api/request/update/${requestId}/`,
         { status: action },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Token ${localStorage.getItem("owner_token")}` } }
       );
       // Refresh list after update
       setRequests((prev) =>
@@ -56,7 +56,7 @@ useEffect(() => {
   
 useEffect(() => {
   const fetchMyProperties = async () => {
-  const token = localStorage.getItem('token');  // get saved token
+  const token = localStorage.getItem('owner_token');  // get saved token
   console.log("Token : ",token);
   if (!token) {
     console.log("User not logged in");
@@ -255,7 +255,7 @@ const facilityNameMap = {
     setLoading(true);
 
     // Submit form to backend API
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('owner_token');
     console.log("Token : ",token)
     try {
       const response = await axios.post("http://127.0.0.1:8000/api/upload-property/", data, {

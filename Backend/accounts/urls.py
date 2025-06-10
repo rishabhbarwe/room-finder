@@ -1,11 +1,12 @@
 from django.urls import path
-from .views import RegisterView, LoginView,PropertyCreateView,PropertyByOwnerView,MyPropertiesView, TenantPropertyListView 
+from .views import RegisterView, LoginView,PropertyCreateView,PropertyByOwnerView,MyPropertiesView, TenantPropertyListView , FilteredPropertyList
 from .views import (
     CreatePropertyRequestView,
     OwnerPropertyRequestsView,
     TenantSentRequestsView,
     UpdateRequestStatusView,
-    AllPropertiesAPIView
+    AllPropertiesAPIView,
+   
 )
 
 urlpatterns = [
@@ -19,6 +20,8 @@ urlpatterns = [
     path('tenant/requests/', TenantSentRequestsView.as_view(), name='tenant-requests'),
     path('request/update/<int:request_id>/', UpdateRequestStatusView.as_view(), name='update-request-status'),
     path('tenant/properties/', TenantPropertyListView.as_view(), name='tenant-properties'),
+    path("api/properties/", FilteredPropertyList.as_view(), name="filtered-properties"),
+
 
      
 

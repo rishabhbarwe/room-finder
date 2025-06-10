@@ -229,3 +229,28 @@ class TenantPropertyListView(ListAPIView):
     queryset = Property.objects.all()
     serializer_class = PropertySerializer
 
+
+class FilteredPropertyList(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def get(self, request):
+        room_types = request.GET.get("room_types", "")
+        locations = request.GET.get("locations", "")
+        min_rent = request.GET.get("min_rent", "")
+
+        properties = Property.objects.all()
+
+        if room_types:
+            room_type_list = room_types.split(",")
+            properties = properties.filter(room_type__in=room_type_list)
+
+        if locations:
+            location_list = locations.split(",")
+            properties = properties.filter(city__iexact__in=location_list)  # or use address__icontains
+
+        if min_rent:
+            properties = properties.filter(rent__gte=min_rent)
+
+        serializer = PropertySerializer(properties, many=True)
+        return Response(serializer.data)
+

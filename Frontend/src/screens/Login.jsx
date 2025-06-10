@@ -105,12 +105,24 @@ const Login = () => {
       try {
     const response = await login(formData); // Calls Django login API
     console.log("Login success:", response.data);
+    if(response.data.user.usertype === "tenant"){
+           localStorage.setItem("tenant_token", response.data.token);
+    }
+    else if(response.data.user.usertype === "owner"){
+          localStorage.setItem("owner_token", response.data.token);
+    }
+
     localStorage.setItem("Name", response.data.user.name);
-    localStorage.setItem("token", response.data.token);
+    
     // Save token/user info if needed
      if(formData.remember){
         
-        localStorage.setItem("token", response.data.token);
+         if(response.data.user.usertype === "tenant"){
+           localStorage.setItem("tenant_token", response.data.token);
+          }
+          else if(response.data.user.usertype === "owner"){
+          localStorage.setItem("owner_token", response.data.token);
+         }
 
       }
     

@@ -22,7 +22,7 @@ const App = ()=>{
   const data = localStorage.getItem("signupdata");
   if (data) {
     try {
-      usertype = JSON.parse(data).usertype;
+      usertype = JSON.parse(data).user.usertype;
     } catch (e) {
       console.error("Invalid JSON in localStorage for signupdata");
     }

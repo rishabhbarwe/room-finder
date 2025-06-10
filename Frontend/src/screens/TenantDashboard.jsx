@@ -1,11 +1,53 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState,useEffect} from "react";
 import profile from '../assets/dummyProfile.jpeg'
+import axios from "axios";
+import phone from '../assets/phone.png'
+import email from '../assets/email.png'
 
 const TenantDashboard = () => {
 
   const [selectedFilters, setSelectedFilters] = useState([]);
+
+  const [gettingOwnersProperty, setgettingOwnersProperty] = useState([]);
+  const [loadingProperty, setLoadingProperty] = useState(true);  // initially true
+
+  const facilityNameMap = {
+  facility0: "RO",
+  facility1: "Furnished",
+  facility2: "Laundry",
+  facility3: "WiFi",
+  // add other mappings if needed
+};
+
+  const handleSendRequest = async (propertyId) => {
+  try {
+    const response = await fetch("http://localhost:8000/api/property-request/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`, // if using JWT auth
+      },
+      body: JSON.stringify({
+        property: propertyId,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      alert("Request sent successfully!");
+    } else {
+      alert("Error: " + (data.detail || data.message || "Unknown error"));
+    }
+  } catch (error) {
+    console.error("Send request error:", error);
+    alert("Something went wrong.");
+  }
+};
+
+
 
   const handleCheckboxChange = (e) => {
     const value = e.target.value;
@@ -24,12 +66,39 @@ const TenantDashboard = () => {
   const roomTypes = ['1RK', '1BHK', '2BHK', '3BHK'];
   const locations = ['Bholaram', 'Bhawarkua', 'Vishnupuri', 'Khandwa Naka'];
   const rents = ['4000', '5000', '6000'];
+
+  useEffect(() => {
+  const fetchAllProperties = async () => {
+    const token = localStorage.getItem('token');  // get saved token
+  console.log("Token : ",token);
+  if (!token) {
+    console.log("User not logged in");
+    return;
+  }
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/tenant/properties/", {
+      headers: {
+        Authorization: `Token ${token}`,
+      },
+    });
+      console.log("Response : ",response.data)
+      setgettingOwnersProperty(response.data);
+    } catch (error) {
+      console.error("Error fetching tenant properties:", error);
+    } finally {
+      setLoadingProperty(false);
+    }
+  };
+
+  fetchAllProperties();
+}, []);
+
  
   return (
     <div className="container-fluid">
   <div className="row min-vh-100">
     {/* Sidebar for md and above */}
-    <div className="col-md-2 d-none d-md-block bg-dark text-white p-3 vh-100">
+    <div className="col-md-2 d-none d-md-block bg-dark text-white p-3 min-vh-100  position-fixed top-0 start-0">
                   <div className="d-flex align-items-center flex-row justify-content-start align-items-center">
                     <img src={profile} alt=""
                     style={{
@@ -37,7 +106,7 @@ const TenantDashboard = () => {
                       height : 40,
                       borderRadius : '50%'
                     }}/>
-                    <p className="h6 ms-2 text-white">Dummy name</p>
+                    <p className="h6 ms-2 fs-5 text-primary">{localStorage.getItem("Name")}</p>
                   </div>
       <hr />
       <ul className="nav flex-column">
@@ -45,16 +114,16 @@ const TenantDashboard = () => {
           <a href="#" className="nav-link text-white fs-5 fw-bold">My property</a>
         </li>
         <li className="nav-item">
-          <a href="#" className="nav-link text-white fs-5 fw-bold">My profile</a>
+          <Link to='/tenantrequest' className="nav-link text-white fs-5 fw-bold">My requests</Link>
         </li>
         <li className="nav-item">
-          <a href="#" className="nav-link text-white fs-5 fw-bold">Message</a>
+          <Link to='/messages' className="nav-link text-white fs-5 fw-bold">Messages</Link>
         </li>
         <li className="nav-item">
           <a href="#" className="nav-link text-white fs-5 fw-bold">Payment details</a>
         </li>
         <li className="nav-item">
-          <Link to="/" className="nav-link text-white fs-5 fw-bold">Logout</Link>
+          <Link to="/login" className="nav-link text-danger fs-5 fw-bold"><u>Logout</u></Link>
         </li>
       </ul>
     </div>
@@ -99,7 +168,7 @@ const TenantDashboard = () => {
                               </a>
                             </li>
                             <li class="nav-item my-1">
-                             <Link to="/" style={{
+                             <Link to="/login" style={{
                               textDecoration : "none",
                              
                               
@@ -134,7 +203,7 @@ const TenantDashboard = () => {
     </div> */}
 
     {/* Main content */}
-    <div className="col-md-10">
+    <div className="col-md-10 offset-md-2">
       {/* Top Navbar */}
       <nav className="navbar navbar-light px-4 my-2" style={{
          backgroundColor : '#669bbc',
@@ -187,75 +256,82 @@ const TenantDashboard = () => {
   borderRadius : 10
  }}>
       <div className="col-md-9">
-        <div className="dropdown">
-          <button
-            className="btn btn-dark dropdown-toggle py-2 px-4"
-            type="button"
-            data-bs-toggle="dropdown"
-            style={{ fontSize: '1.1rem', minWidth: '100%' }}
-          >
-            Filter by Room Type, Location, Rent
-          </button>
-          <ul
-            className="dropdown-menu p-3"
-            style={{ width: '100%', maxWidth: '400px', fontSize: '1rem' }}
-          >
-            <li><strong>Room Type</strong></li>
-            {roomTypes.map((type) => (
-              <li key={type}>
-                <div className="form-check">
-                  <input
-                    className="form-check-input room-filter"
-                    type="checkbox"
-                    value={type.toLowerCase()}
-                    id={`filter-${type}`}
-                    onChange={handleCheckboxChange}
-                  />
-                  <label className="form-check-label" htmlFor={`filter-${type}`}>
-                    {type}
-                  </label>
-                </div>
-              </li>
-            ))}
+  <div className="dropdown">
+    <button
+      className="btn btn-dark dropdown-toggle py-2 px-4"
+      type="button"
+      data-bs-toggle="dropdown"
+      style={{ fontSize: '1.1rem', minWidth: '100%' }}
+    >
+      Filter by Room Type, Location, Rent
+    </button>
+    <div
+      className="dropdown-menu p-3"
+      style={{ width: '100%', maxWidth: '100%', fontSize: '1rem' }}
+    >
+      <div className="d-flex justify-content-between flex-wrap gap-4">
 
-            <li className="mt-2"><strong>Location</strong></li>
-            {locations.map((loc) => (
-              <li key={loc}>
-                <div className="form-check">
-                  <input
-                    className="form-check-input room-filter"
-                    type="checkbox"
-                    value={loc.toLowerCase()}
-                    id={`filter-${loc}`}
-                    onChange={handleCheckboxChange}
-                  />
-                  <label className="form-check-label" htmlFor={`filter-${loc}`}>
-                    {loc}
-                  </label>
-                </div>
-              </li>
-            ))}
-
-            <li className="mt-2"><strong>Rent From</strong></li>
-            {rents.map((rent) => (
-              <li key={rent}>
-                <div className="form-check">
-                  <input
-                    className="form-check-input room-filter"
-                    type="checkbox"
-                    value={`rent-${rent}`}
-                    id={`filter-rent-${rent}`}
-                    onChange={handleCheckboxChange}
-                  />
-                  <label className="form-check-label" htmlFor={`filter-rent-${rent}`}>
-                    ₹{rent}+
-                  </label>
-                </div>
-              </li>
-            ))}
-          </ul>
+        {/* Room Type */}
+        <div>
+          <strong>Room Type</strong>
+          {roomTypes.map((type) => (
+            <div className="form-check" key={type}>
+              <input
+                className="form-check-input room-filter"
+                type="checkbox"
+                value={type.toLowerCase()}
+                id={`filter-${type}`}
+                onChange={handleCheckboxChange}
+              />
+              <label className="form-check-label" htmlFor={`filter-${type}`}>
+                {type}
+              </label>
+            </div>
+          ))}
         </div>
+
+        {/* Location */}
+        <div>
+          <strong>Location</strong>
+          {locations.map((loc) => (
+            <div className="form-check" key={loc}>
+              <input
+                className="form-check-input room-filter"
+                type="checkbox"
+                value={loc.toLowerCase()}
+                id={`filter-${loc}`}
+                onChange={handleCheckboxChange}
+              />
+              <label className="form-check-label" htmlFor={`filter-${loc}`}>
+                {loc}
+              </label>
+            </div>
+          ))}
+        </div>
+
+        {/* Rent */}
+        <div>
+          <strong>Rent From</strong>
+          {rents.map((rent) => (
+            <div className="form-check" key={rent}>
+              <input
+                className="form-check-input room-filter"
+                type="checkbox"
+                value={`rent-${rent}`}
+                id={`filter-rent-${rent}`}
+                onChange={handleCheckboxChange}
+              />
+              <label className="form-check-label" htmlFor={`filter-rent-${rent}`}>
+                ₹{rent}+
+              </label>
+            </div>
+          ))}
+        </div>
+
       </div>
+    </div>
+  </div>
+</div>
 
       <div className="col-md-3 text-end mt-3 mt-md-0">
         <button
@@ -267,6 +343,68 @@ const TenantDashboard = () => {
         </button>
       </div>
     </div>
+     {loadingProperty ? (
+  <div className="d-flex justify-content-center align-items-center" style={{ height: "100px" }}>
+    <span className="text-primary fw-bold  me-2"><span className="text-danger">Wait</span> getting properties</span>
+    <div className="spinner-grow text-danger" role="status">
+      
+      <span className="visually-hidden">Loading...</span>
+    </div>
+  </div>
+): (gettingOwnersProperty.slice(-2).map((property) => (
+  <div key={property.id} className="card my-3" style={{ backgroundColor: "#eee4e1" }}>
+    <div className="row g-0"> {/* Bootstrap row with no gutters */}
+      
+      {/* LEFT SIDE - Property Info */}
+      <div className="col-md-6 p-3">
+        <div className="card-body">
+          <h5 className="card-title" style={{
+            color : "#14213d"
+          }}>{property.building_name} | {property.owner_name}</h5>
+          <em className="card-text my-1 text-secondary">
+            {property.address}, {property.city}, {property.state} - {property.pincode}
+          </em>
+          <p><strong>Contact:</strong> <img src={email} alt="" width={20}/> {property.email} | <img src={phone} alt="" width={20} /> {property.mobile}</p>
+          <p style={{marginTop : -5}}><strong>Rent:</strong> ₹{property.rent_from} - ₹{property.rent_to}</p>
+
+          <div className="row">
+            <div className="col-sm-6">
+              <p><strong>Room Types:</strong></p>
+              <ul>
+                {property.room_types.map((room, idx) => (
+                  <li key={idx}>{room.type}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="col-sm-6">
+              <p><strong>Facilities:</strong></p>
+              <ul>
+                {Object.entries(property.facilities)
+                  .filter(([facilityKey, isAvailable]) => isAvailable)
+                  .map(([facilityKey]) => (
+                    <li key={facilityKey}>
+                      {facilityNameMap[facilityKey] || facilityKey}
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          </div>
+          <button className="btn btn-warning" onClick={() => handleSendRequest(property.id)}>Send Request</button>
+        </div>
+      </div>
+
+      {/* RIGHT SIDE - Image */}
+      <div className="col-md-6 d-flex justify-content-end align-items-center pe-5">
+  <img
+    src={`${property.building_image}`}
+    alt={property.building_name}
+    style={{ width: "300px", height: "250px", objectFit: "cover", borderRadius: "8px",border : "4px solid white" }}
+  />
+</div>
+    </div>
+  </div>
+)))}
 
 
         <div className="mt-5">

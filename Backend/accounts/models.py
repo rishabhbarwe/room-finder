@@ -38,3 +38,19 @@ class Property(models.Model):
 
     def __str__(self):
         return self.building_name
+
+class PropertyRequest(models.Model):
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='requests')
+    tenant = models.ForeignKey(settings.AUTH_USER_MODEL , on_delete=models.CASCADE, related_name='sent_requests')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='received_requests')
+    status = models.CharField(max_length=20, choices=[
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+    ], default='pending')
+    message = models.TextField(blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.tenant.username} → {self.property.building_name} [{self.status}]"
+

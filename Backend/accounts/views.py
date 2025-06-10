@@ -5,8 +5,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from .serializers import RegisterSerializer, LoginSerializer, PropertySerializer
-from .models import Property
+from .serializers import PropertyRequestSerializer, RegisterSerializer, LoginSerializer, PropertySerializer
+from .models import Property, PropertyRequest
 from rest_framework import viewsets, permissions, status
 from rest_framework.permissions import AllowAny
 
@@ -122,3 +122,110 @@ class PropertyByOwnerView(APIView):
         properties = Property.objects.filter(owner_name=owner_name)
         serializer = PropertySerializer(properties, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+class CreatePropertyRequestView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        if request.user.usertype != 'tenant':
+            return Response({'error': 'Only tenants can request properties.'}, status=403)
+
+        property_id = request.data.get('property_id')
+        message = request.data.get('message', '')
+
+        try:
+            property_obj = Property.objects.get(id=property_id)
+        except Property.DoesNotExist:
+            return Response({'error': 'Property not found.'}, status=404)
+
+        # Prevent duplicate requests
+        if PropertyRequest.objects.filter(property=property_obj, tenant=request.user).exists():
+            return Response({'error': 'You have already requested this property.'}, status=400)
+
+        request_obj = PropertyRequest.objects.create(
+            property=property_obj,
+            tenant=request.user,
+            owner=property_obj.owner,
+            message=message
+        )
+
+        serializer = PropertyRequestSerializer(request_obj)
+        return Response(serializer.data, status=201)
+    
+class OwnerPropertyRequestsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if request.user.usertype != 'owner':
+            return Response({'error': 'Only owners can view requests.'}, status=403)
+
+        requests_qs = PropertyRequest.objects.filter(owner=request.user).order_by('-timestamp')
+        serializer = PropertyRequestSerializer(requests_qs, many=True)
+        return Response(serializer.data, status=200)
+
+class TenantSentRequestsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if request.user.usertype != 'tenant':
+            return Response({'error': 'Only tenants can view their sent requests.'}, status=403)
+
+        requests_qs = PropertyRequest.objects.filter(tenant=request.user).order_by('-timestamp')
+        serializer = PropertyRequestSerializer(requests_qs, many=True)
+        return Response(serializer.data, status=200)
+
+from rest_framework.generics import get_object_or_404
+from .serializers import PropertyRequestSerializer
+
+class UpdateRequestStatusView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, request_id):
+        property_request = get_object_or_404(PropertyRequest, id=request_id)
+
+        status = request.data.get('status')
+        if status not in ['accepted', 'rejected']:
+            return Response({'error': 'Invalid status'}, status=400)
+
+        property_request.status = status
+        property_request.save()
+
+        # Use serializer to get owner details only if accepted
+        serializer = PropertyRequestSerializer(property_request)
+        data = serializer.data
+
+        # Create message for tenant
+        if status == 'accepted':
+            message = f"""
+Your request for '{data['property_name']}' has been accepted!
+
+Contact Details:
+- Name: {data['owner_name']}
+- Email: {data['owner_email']}
+- Mobile: {data['owner_mobile']}
+"""
+        else:
+            message = f"Your request for '{data['property_name']}' has been rejected."
+
+        return Response({
+            'success': f'Request {status} successfully.',
+            'message_to_tenant': message.strip()
+        }, status=200)
+
+
+from rest_framework.generics import ListAPIView
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from .models import Property
+from .serializers import PropertySerializer
+from rest_framework.permissions import AllowAny
+
+class AllPropertiesAPIView(ListAPIView):
+    queryset = Property.objects.all()
+    serializer_class = PropertySerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]  # or AllowAny if you prefer
+    
+class TenantPropertyListView(ListAPIView):
+    queryset = Property.objects.all()
+    serializer_class = PropertySerializer
+

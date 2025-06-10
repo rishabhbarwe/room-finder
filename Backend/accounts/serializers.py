@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser
+from .models import CustomUser, PropertyRequest
 from .models import Property
 from django.contrib.auth import authenticate
 
@@ -85,3 +85,33 @@ class PropertySerializer(serializers.ModelSerializer):
             representation['building_image'] = request.build_absolute_uri(instance.building_image.url)
         return representation
 #-----------------------------------------------------------------------------------------
+
+class PropertyRequestSerializer(serializers.ModelSerializer):
+    property_name = serializers.CharField(source='property.building_name', read_only=True)
+    tenant_name = serializers.CharField(source='tenant.username', read_only=True)
+    owner_name = serializers.SerializerMethodField()
+    owner_email = serializers.SerializerMethodField()
+    owner_mobile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PropertyRequest
+        fields = [
+            'id', 'property', 'property_name', 'tenant', 'tenant_name', 'status', 'message',
+            'timestamp', 'owner_name', 'owner_email', 'owner_mobile'
+        ]
+
+    def get_owner_name(self, obj):
+        if obj.status == 'accepted':
+            return obj.property.owner_name
+        return None
+
+    def get_owner_email(self, obj):
+        if obj.status == 'accepted':
+            return obj.property.email
+        return None
+
+    def get_owner_mobile(self, obj):
+        if obj.status == 'accepted':
+            return obj.property.mobile
+        return None
+

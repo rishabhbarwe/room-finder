@@ -13,8 +13,46 @@ const OwnerDashboard = () => {
 
 const [gettingOwnersProperty, setgettingOwnersProperty] = useState([]);
 const [loadingProperty, setLoadingProperty] = useState(true);  // initially true
+const [requests, setRequests] = useState([]);
+const [loadingRequest, setLoadingRequest] = useState(true);
 
+useEffect(() => {
+    
+    const fetchRequests = async () => {
+      try {
+        const response = await axios.get("http://localhost:8000/api/owner/requests/", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        });
+        setRequests(response.data);
+      } catch (error) {
+        console.error("Error fetching owner requests:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchRequests();
+  }, []);
+
+    const handleAction = async (requestId, action) => {
+    try {
+      await axios.patch(
+        `http://localhost:8000/api/request/update/${requestId}/`,
+        { status: action },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      // Refresh list after update
+      setRequests((prev) =>
+        prev.map((req) =>
+          req.id === requestId ? { ...req, status: action } : req
+        )
+      );
+    } catch (error) {
+      console.error(`Error updating request status:`, error);
+    }
+  };
   
 useEffect(() => {
   const fetchMyProperties = async () => {
@@ -800,36 +838,66 @@ const facilityNameMap = {
             
             </div>
             {/* Tenant Requests Table */}
-            <h5>Tenant Requests</h5>
-            <div className="table-responsive">
-              <table className="table table-bordered table-striped">
-                <thead className="table-dark">
-                  <tr>
-                    <th>Name</th>
-                    <th>Property</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>John Doe</td>
-                    <td>Sample Property</td>
-                    <td>
-                      <span className="badge bg-warning text-dark">
-                        Pending
-                      </span>
-                    </td>
-                    <td>
-                      <button className="btn btn-sm btn-success me-2">
-                        Accept
-                      </button>
-                      <button className="btn btn-sm btn-danger">Reject</button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+<h5>Tenant Requests</h5>
+      <div className="table-responsive">
+        <table className="table table-bordered table-striped">
+          <thead className="table-dark">
+            <tr>
+              <th>Tenant</th>
+              <th>Property</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {requests.length === 0 ? (
+              <tr>
+                <td colSpan="4">No requests found.</td>
+              </tr>
+            ) : (
+              requests.map((req) => (
+                <tr key={req.id}>
+                  <td>{req.tenant_name}</td>
+                  <td>{req.property_name}</td>
+                  <td>
+                    <span
+                      className={`badge ${
+                        req.status === "pending"
+                          ? "bg-warning text-dark"
+                          : req.status === "accepted"
+                          ? "bg-success"
+                          : "bg-danger"
+                      }`}
+                    >
+                      {req.status}
+                    </span>
+                  </td>
+                  <td>
+                    {req.status === "pending" ? (
+                      <>
+                        <button
+                          className="btn btn-sm btn-success me-2"
+                          onClick={() => handleAction(req.id, "accepted")}
+                        >
+                          Accept
+                        </button>
+                        <button
+                          className="btn btn-sm btn-danger"
+                          onClick={() => handleAction(req.id, "rejected")}
+                        >
+                          Reject
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-muted">Action taken</span>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
            
           </div>
         </div>

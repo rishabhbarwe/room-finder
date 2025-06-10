@@ -115,9 +115,10 @@ const Login = () => {
       }
     
 
-    if (response.data.usertype === "tenant") {
+    if (response.data.user.usertype === "tenant") {
       navigate("/tenant");
     } else {
+      console.log("Usertype : ",response.data.user.usertype)
       navigate("/owner");
     }
   } catch (error) {

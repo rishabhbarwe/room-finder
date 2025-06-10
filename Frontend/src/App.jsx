@@ -6,9 +6,11 @@ import TenantDashboard from './screens/TenantDashboard';
 import TenantDetails from './screens/TenantDetails';
 import RentOverview from './screens/RentOverview';
 import Myproperties from './screens/Myproperties';
+import TenantRequests from './screens/TenantRequests';
 import { BrowserRouter,Routes,Route } from 'react-router-dom';
 import {Provider} from 'react-redux';
 import { Store } from './reduxsetup/Store';
+import Messages from './screens/Messages';
 
 
 
@@ -46,6 +48,8 @@ const App = ()=>{
                   {/*end */}
                   
                   {/*Tenant side url bar routes */}
+                   <Route path='/tenantrequest' element={<TenantRequests/>}></Route>
+                   <Route path='/messages' element={<Messages/>}></Route>
                   
 
 

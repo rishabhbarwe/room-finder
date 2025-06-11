@@ -1,3 +1,4 @@
+import success from '../assets/success.gif'
 const RequestSendModal = ({ show, message, onClose }) => {
   if (!show) return null; // Return nothing if modal is not to be shown
 
@@ -20,15 +21,24 @@ const RequestSendModal = ({ show, message, onClose }) => {
           backgroundColor: "#669bbc",
           padding: "2rem",
           borderRadius: "12px",
-          minWidth: "400px",
-          maxWidth: "600px",
+          minWidth: "500px",
+          maxWidth: "700px",
+          minHeight : "300px",
           boxShadow: "0 0 20px rgba(0,0,0,0.3)",
+          display : 'flex',
+          flexDirection : 'column',
+          justifyContent  : 'center',
+          alignItems : 'center'
         }}
       >
         <div className="text-center mb-3">
-          <h4 style={{
+          {/* <h4 style={{
             color : "#4f772d"
-          }}>✅ Success</h4>
+          }}>✅ Success</h4> */}
+          <img src={success} alt="Success" width={50} style={{
+            borderRadius : '50%',
+            
+          }}/>
         </div>
 
         <div className="text-center mb-4">

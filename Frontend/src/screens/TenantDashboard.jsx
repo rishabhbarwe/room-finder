@@ -166,6 +166,7 @@ useEffect(() => {
   const handleSearch = async () => {
   const selected = [...filters]; // your state array
   const { roomTypes, locations, rent } = parseFilters(selected);
+  console.log("Filters : ",selected)
 
   try {
     const response = await axios.get("http://localhost:8000/api/properties/", {
@@ -174,6 +175,7 @@ useEffect(() => {
         locations: locations.join(","),
         min_rent: rent || "",
       },
+      
     });
 
     console.log(response.data); // filtered properties
@@ -485,7 +487,7 @@ useEffect(() => {
         <button
           className="btn btn-primary px-4 py-2"
           style={{ fontSize: '1.1rem' }}
-          onClick={handleSearch}
+          onClick={()=>handleSearch()}
         >
           Search
         </button>

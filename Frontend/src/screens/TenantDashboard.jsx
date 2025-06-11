@@ -10,7 +10,7 @@ import RequestSendModal from "../utils/RequestSendModal";
 const TenantDashboard = () => {
 
   const [selectedFilters, setSelectedFilters] = useState([]);
-  const [sendrequest, setSendrequest] = useState(false);
+//  const [sendrequest, setSendrequest] = useState(false);
   const [activity, setActivity] = useState([]); //to show data in activity table
 
   const [gettingOwnersProperty, setgettingOwnersProperty] = useState([]);
@@ -164,7 +164,7 @@ useEffect(() => {
   };
 
   const handleSearch = async () => {
-  const selected = [...filters]; // your state array
+  const selected = [...selectedFilters]; // your state array
   const { roomTypes, locations, rent } = parseFilters(selected);
   console.log("Filters : ",selected)
 
@@ -184,6 +184,7 @@ useEffect(() => {
     console.error("Error fetching filtered properties:", error);
   }
 };
+
 
 
   const roomTypes = ['1RK', '1BHK', '2BHK', '3BHK'];
@@ -531,7 +532,7 @@ useEffect(() => {
               <p><strong>Facilities:</strong></p>
               <ul>
                 {Object.entries(property.facilities)
-                  .filter(([facilityKey, isAvailable]) => isAvailable)
+                  .filter(([, isAvailable]) => isAvailable)
                   .map(([facilityKey]) => (
                     <li key={facilityKey}>
                       {facilityNameMap[facilityKey] || facilityKey}

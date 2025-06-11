@@ -5,15 +5,22 @@ import profile from '../assets/dummyProfile.jpeg'
 import axios from "axios";
 import phone from '../assets/phone.png'
 import email from '../assets/email.png'
+import RequestSendModal from "../utils/RequestSendModal";
 
 const TenantDashboard = () => {
 
   const [selectedFilters, setSelectedFilters] = useState([]);
-  const [sendrequest, setSendrequest] = useState(false)
+  const [sendrequest, setSendrequest] = useState(false);
+  const [activity, setActivity] = useState([]); //to show data in activity table
 
   const [gettingOwnersProperty, setgettingOwnersProperty] = useState([]);
   const [loadingProperty, setLoadingProperty] = useState(true);  // initially true
   const [requestedProperties, setRequestedProperties] = useState({});
+  const [loadingRequest, setLoadingRequest] = useState({});
+  
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+
 
   const facilityNameMap = {
   facility0: "RO",
@@ -24,45 +31,126 @@ const TenantDashboard = () => {
 };
 
  const handleSendRequest = async (propertyId) => {
-  const token = localStorage.getItem('tenant_token');  // get saved token
+  const token = localStorage.getItem('tenant_token');
   console.log("Token:", token);
-
-  setRequestedProperties((prev) => ({
-    ...prev,
-    [propertyId]: !prev[propertyId],  // toggle state for this property
-  }));
 
   if (!token) {
     alert("You need to log in first!");
     return;
   }
+  
+  // Set loading for this property
+  setLoadingRequest((prev) => ({ ...prev, [propertyId]: true }));
+  const isRequested = requestedProperties[propertyId];
 
   try {
-    const response = await axios.post(
-      "http://localhost:8000/api/property-request/",
-      {  property_id: propertyId },
-      {
-        headers: {
-          Authorization: `Token ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    if (isRequested) {
+      // ❌ UNSEND REQUEST - DELETE
+      const response = await axios.delete(
+        `http://localhost:8000/api/property-request/${propertyId}/`,
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
+      );
 
-    alert("Request sent successfully!");
-    console.log("Response:", response.data);
+     setModalMessage("Request deleted successfully!");
+     setShowModal(true);
+      console.log("Delete Response:", response.data);
+    } else {
+      // ✅ SEND REQUEST - POST
+      const response = await axios.post(
+        "http://localhost:8000/api/property-request/",
+        { property_id: propertyId },
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+     setModalMessage("Request sent successfully!");
+     setShowModal(true);
+      console.log("Send Response:", response.data);
+    }
+
+    // Toggle request state after success
+    setRequestedProperties((prev) => ({
+      ...prev,
+      [propertyId]: !prev[propertyId],
+    }));
   } catch (error) {
-    console.error("Error sending request:", error);
+    console.error("Error during send/unsend request:", error);
 
     if (error.response) {
-      // Backend responded with an error
       const msg = error.response.data.detail || error.response.data.message || "Something went wrong";
       alert("Error: " + msg);
     } else {
       alert("Network error or server is down.");
     }
+  }finally {
+    // Stop spinner
+    setLoadingRequest((prev) => ({ ...prev, [propertyId]: false }));
   }
 };
+
+// useEffect(() => {
+//   if (showModal) {
+//     const timer = setTimeout(() => setShowModal(false), 3000);
+//     return () => clearTimeout(timer);
+//   }
+// }, [showModal]);
+
+
+useEffect(() => {
+  const fetchActivity = async () => {
+    try {
+      const token = localStorage.getItem("tenant_token");
+      const res = await axios.get("http://localhost:8000/tenant/request-history/", {
+        headers: {
+          Authorization: `Token ${token}`,
+        },
+      });
+      setActivity(res.data);
+    } catch (error) {
+      console.error("Failed to fetch tenant requests:", error);
+    }
+  };
+
+  fetchActivity();
+}, []);
+
+
+
+ useEffect(() => {
+  const fetchRequestedProperties = async () => {
+    const token = localStorage.getItem("tenant_token");
+    if (!token) return;
+
+    try {
+      const response = await axios.get("http://localhost:8000/api/requested-properties/", {
+        headers: {
+          Authorization: `Token ${token}`,
+        },
+      });
+
+      const requestedIds = response.data.requested_property_ids;
+      const mapping = {};
+      requestedIds.forEach(id => {
+        mapping[id] = true;
+      });
+
+      setRequestedProperties(mapping);
+    } catch (error) {
+      console.error("Failed to fetch requested properties:", error);
+    }
+  };
+
+  fetchRequestedProperties();
+}, []);
+
 
 
 
@@ -148,7 +236,14 @@ const TenantDashboard = () => {
 
  
   return (
+    
     <div className="container-fluid">
+      <RequestSendModal
+  show={showModal}
+  message={modalMessage}
+  onClose={() => setShowModal(false)}
+/>
+
   <div className="row min-vh-100">
     {/* Sidebar for md and above */}
     <div className="col-md-2 d-none d-md-block bg-dark text-white p-3 min-vh-100  position-fixed top-0 start-0">
@@ -404,7 +499,7 @@ const TenantDashboard = () => {
       <span className="visually-hidden">Loading...</span>
     </div>
   </div>
-): (gettingOwnersProperty.slice(-2).map((property) => (
+): (gettingOwnersProperty.slice().map((property) => (
   <div key={property.id} className="card my-3" style={{ backgroundColor: "#eee4e1" }}>
     <div className="row g-0"> {/* Bootstrap row with no gutters */}
       
@@ -443,11 +538,24 @@ const TenantDashboard = () => {
               </ul>
             </div>
           </div>
-          {!requestedProperties[property.id] ? (<button className="btn btn-warning" onClick={() =>{ handleSendRequest(property.id)
-           setSendrequest(true)}}>Send Request</button>)
-             : (<button className="btn btn-warning" onClick={() => handleSendRequest(property.id)}>Unsend Request</button>)}
+         <button
+  className="btn btn-primary"
+  onClick={() => handleSendRequest(property.id)}
+  disabled={loadingRequest[property.id]}  // Optional: disable while loading
+>
+  {loadingRequest[property.id] ? (
+    <>
+      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+      Loading...
+    </>
+  ) : (
+    requestedProperties[property.id] ? "Unsend Request" : "Send Request"
+  )}
+</button>
+
             <div> {requestedProperties[property.id] && (
-              <em className="text-danger">You requested this property</em>
+              <em className="blink-text">You requested this property, check messages for owner response</em>
+
             )}</div>
         </div>
       </div>
@@ -465,30 +573,42 @@ const TenantDashboard = () => {
 )))}
 
 
-        <div className="mt-5">
-          <h4>Recent Activity</h4>
-          <table className="table table-bordered table-striped mt-3">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Activity</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>01 May 2025</td>
-                <td>Rent Paid</td>
-                <td><span className="badge bg-success">Success</span></td>
-              </tr>
-              <tr>
-                <td>25 Apr 2025</td>
-                <td>Message Sent to Owner</td>
-                <td><span className="badge bg-info">Sent</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+<div className="mt-5">
+  <h4>Recent Activity</h4>
+  <table className="table table-bordered table-striped mt-3">
+    <thead className="table-dark">
+      <tr>
+        <th>Date</th>
+        <th>Activity</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {activity.length === 0 ? (
+        <tr>
+          <td colSpan="3" className="text-center text-muted">No activity yet.</td>
+        </tr>
+      ) : (
+        activity.map((item) => (
+          <tr key={item.id}>
+            <td>{new Date(item.timestamp).toLocaleDateString()}</td>
+            <td>Requested {item.property_name}</td>
+            <td>
+              <span className={`badge ${
+                item.status === "accepted" ? "bg-success" :
+                item.status === "pending" ? "bg-warning text-dark" : 
+                "bg-danger"
+              }`}>
+                {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+              </span>
+            </td>
+          </tr>
+        ))
+      )}
+    </tbody>
+  </table>
+</div>
+
       </div>
     </div>
   </div>

@@ -3,14 +3,14 @@ import axios from "axios";
 
 const Messages = () => {
   const [messages, setMessages] = useState([]);
-  const token = localStorage.getItem("token"); // assuming you're storing token
+  const token = localStorage.getItem("tenant_token"); // assuming you're storing token
 
   useEffect(() => {
     const fetchRequests = async () => {
       try {
         const response = await axios.get("http://localhost:8000/api/tenant/requests/", {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Token ${token}`,
           },
         });
 

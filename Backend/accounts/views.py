@@ -254,3 +254,36 @@ class FilteredPropertyList(APIView):
         serializer = PropertySerializer(properties, many=True)
         return Response(serializer.data)
 
+class DeletePropertyRequestView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, property_id):
+        try:
+            # Ensure the user is deleting *their own* request
+            property_request = PropertyRequest.objects.get(
+                tenant=request.user,
+                property__id=property_id
+            )
+            property_request.delete()
+            return Response({"message": "Request deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        except PropertyRequest.DoesNotExist:
+            return Response({"detail": "No request found for this property by the current user."}, status=status.HTTP_404_NOT_FOUND)
+
+class RequestedPropertiesView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        requests = PropertyRequest.objects.filter(tenant=request.user)
+        property_ids = requests.values_list('property_id', flat=True)
+        return Response({'requested_property_ids': list(property_ids)})
+    
+class TenantRequestsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if request.user.usertype != 'tenant':
+            return Response({'error': 'Only tenants can access this data'}, status=403)
+
+        requests = PropertyRequest.objects.filter(tenant=request.user).order_by('-timestamp')
+        serializer = PropertyRequestSerializer(requests, many=True)
+        return Response(serializer.data)

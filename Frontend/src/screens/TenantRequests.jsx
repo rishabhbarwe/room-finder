@@ -13,7 +13,7 @@ const TenantRequests = () => {
       try {
         const response = await axios.get("http://localhost:8000/api/tenant/requests/", {
           headers: {
-            Authorization: `Bearer ${token}`
+            Authorization: `Token ${token}`
           }
         });
         setRequests(response.data);

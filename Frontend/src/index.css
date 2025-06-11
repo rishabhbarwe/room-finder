@@ -179,4 +179,30 @@ select:focus {
   height: 3rem;
 }
 
+@keyframes blinkColor {
+  0%   { color: red; }
+  50%  { color: hotpink; }
+  100% { color: red; }
+}
+
+.blink-text {
+  animation: blinkColor 1s infinite;
+  font-weight: bold;
+}
+
+.custom-modal-size {
+  max-width: 800px; /* Increase as needed */
+  width: 90vw;
+ 
+}
+
+.custom-modal-bg {
+  background-color: #cdb4db;  /* Light lavender/pink background */
+  border-radius: 20px;
+  padding: 1rem;
+  border: 2px solid #c084fc;
+}
+
+
+
 

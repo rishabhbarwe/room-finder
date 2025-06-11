@@ -51,6 +51,10 @@ class PropertyRequest(models.Model):
     message = models.TextField(blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ['tenant', 'property']
+
     def __str__(self):
         return f"{self.tenant.username} → {self.property.building_name} [{self.status}]"
+
 

@@ -14,7 +14,7 @@ const OwnerDashboard = () => {
 const [gettingOwnersProperty, setgettingOwnersProperty] = useState([]);
 const [loadingProperty, setLoadingProperty] = useState(true);  // initially true
 const [requests, setRequests] = useState([]);
-const [loadingRequest, setLoadingRequest] = useState(true);
+//const [loadingRequest, setLoadingRequest] = useState(true);
 
 useEffect(() => {
     
@@ -215,7 +215,7 @@ const facilityNameMap = {
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async () => {
     console.log("Property form submitted!")
     // e.preventDefault();
     const isValid = ValidatePropertyDetails(formData, setAlertMsg, setShowAlert);
@@ -801,7 +801,7 @@ const facilityNameMap = {
               <p><strong>Facilities:</strong></p>
               <ul>
                 {Object.entries(property.facilities)
-                  .filter(([facilityKey, isAvailable]) => isAvailable)
+                  .filter(([, isAvailable]) => isAvailable)
                   .map(([facilityKey]) => (
                     <li key={facilityKey}>
                       {facilityNameMap[facilityKey] || facilityKey}

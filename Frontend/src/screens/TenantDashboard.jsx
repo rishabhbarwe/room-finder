@@ -179,7 +179,7 @@ useEffect(() => {
     });
 
     console.log(response.data); // filtered properties
-    setProperties(response.data); // update state
+    setgettingOwnersProperty(response.data); // update state
   } catch (error) {
     console.error("Error fetching filtered properties:", error);
   }

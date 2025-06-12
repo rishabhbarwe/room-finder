@@ -10,6 +10,7 @@ export const register = (userData) => {
 };
 
 export const login = (credentials) => {
+   console.log("Token : ",token)
   return axios.post(`${API_URL}login/`, credentials);
 };
 

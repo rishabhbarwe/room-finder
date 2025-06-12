@@ -79,10 +79,15 @@ class PropertySerializer(serializers.ModelSerializer):
 
         return property_instance
     def to_representation(self, instance):
-           representation = super().to_representation(instance)
-           # Cloudinary already gives full URL
-           representation['building_image'] = instance.building_image.url if instance.building_image else None
-           return representation
+        representation = super().to_representation(instance)
+        if instance.building_image:
+            try:
+            # This returns the full URL directly
+                representation['building_image'] = instance.building_image.url
+            except AttributeError:
+                representation['building_image'] = None
+        return representation
+
 
 #-----------------------------------------------------------------------------------------
 

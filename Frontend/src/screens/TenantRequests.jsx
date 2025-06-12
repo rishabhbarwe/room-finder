@@ -11,7 +11,7 @@ const TenantRequests = () => {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/api/tenant/requests/", {
+        const response = await axios.get("https://room-finder-1ayo.onrender.com/api/tenant/requests/", {
           headers: {
             Authorization: `Token ${token}`
           }

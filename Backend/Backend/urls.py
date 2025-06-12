@@ -32,6 +32,6 @@ urlpatterns = [
     path('api/', include('accounts.urls')),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# ✅ Serve media files even if DEBUG = False
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

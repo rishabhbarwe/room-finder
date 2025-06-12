@@ -20,7 +20,7 @@ useEffect(() => {
     
     const fetchRequests = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/api/owner/requests/", {
+        const response = await axios.get("https://room-finder-1ayo.onrender.com/api/owner/requests/", {
           headers: {
             Authorization: `Token ${localStorage.getItem("owner_token")}`
           }
@@ -39,7 +39,7 @@ useEffect(() => {
     const handleAction = async (requestId, action) => {
     try {
       await axios.patch(
-        `http://localhost:8000/api/request/update/${requestId}/`,
+        `https://room-finder-1ayo.onrender.com/api/request/update/${requestId}/`,
         { status: action },
         { headers: { Authorization: `Token ${localStorage.getItem("owner_token")}` } }
       );
@@ -64,7 +64,7 @@ useEffect(() => {
   }
 
   try {
-    const response = await axios.get('http://127.0.0.1:8000/api/my-properties/', {
+    const response = await axios.get('https://room-finder-1ayo.onrender.com/api/my-properties/', {
       headers: {
         Authorization: `Token ${token}`,
       },
@@ -258,7 +258,7 @@ const facilityNameMap = {
     const token = localStorage.getItem('owner_token');
     console.log("Token : ",token)
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/upload-property/", data, {
+      const response = await axios.post("https://room-finder-1ayo.onrender.com/api/upload-property/", data, {
            headers: {
             'Authorization': `Token ${token}`,  // ✅ Correct placement
             'Content-Type': 'multipart/form-data'
@@ -816,7 +816,7 @@ const facilityNameMap = {
       {/* RIGHT SIDE - Image */}
       <div className="col-md-6 d-flex justify-content-end align-items-center pe-5">
   <img
-    src={`http://localhost:8000${property.building_image}`}
+    src={`https://room-finder-1ayo.onrender.com${property.building_image}`}
     alt={property.building_name}
     style={{ width: "300px", height: "250px", objectFit: "cover", borderRadius: "8px",border : "4px solid white" }}
   />

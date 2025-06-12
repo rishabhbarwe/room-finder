@@ -47,7 +47,7 @@ const TenantDashboard = () => {
     if (isRequested) {
       // ❌ UNSEND REQUEST - DELETE
       const response = await axios.delete(
-        `http://localhost:8000/api/property-request/${propertyId}/`,
+        `https://room-finder-1ayo.onrender.com/api/property-request/${propertyId}/`,
         {
           headers: {
             Authorization: `Token ${token}`,
@@ -61,7 +61,7 @@ const TenantDashboard = () => {
     } else {
       // ✅ SEND REQUEST - POST
       const response = await axios.post(
-        "http://localhost:8000/api/property-request/",
+        "https://room-finder-1ayo.onrender.com/api/property-request/",
         { property_id: propertyId },
         {
           headers: {
@@ -108,7 +108,7 @@ useEffect(() => {
   const fetchActivity = async () => {
     try {
       const token = localStorage.getItem("tenant_token");
-      const res = await axios.get("http://localhost:8000/tenant/request-history/", {
+      const res = await axios.get("https://room-finder-1ayo.onrender.com/tenant/request-history/", {
         headers: {
           Authorization: `Token ${token}`,
         },
@@ -130,7 +130,7 @@ useEffect(() => {
     if (!token) return;
 
     try {
-      const response = await axios.get("http://localhost:8000/api/requested-properties/", {
+      const response = await axios.get("https://room-finder-1ayo.onrender.com/api/requested-properties/", {
         headers: {
           Authorization: `Token ${token}`,
         },
@@ -169,7 +169,7 @@ useEffect(() => {
   console.log("Filters : ",selected)
 
   try {
-    const response = await axios.get("http://localhost:8000/api/properties/", {
+    const response = await axios.get("https://room-finder-1ayo.onrender.com/api/properties/", {
       params: {
         room_types: roomTypes.join(","),
         locations: locations.join(","),
@@ -220,7 +220,7 @@ useEffect(() => {
     return;
   }
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/tenant/properties/", {
+      const response = await axios.get("https://room-finder-1ayo.onrender.com/api/tenant/properties/", {
       headers: {
         Authorization: `Token ${token}`,
       },

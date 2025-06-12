@@ -567,6 +567,7 @@ useEffect(() => {
       <div className="col-md-6 d-flex justify-content-end align-items-center pe-5">
   <img
     src={`${property.building_image}`}
+    
     alt={property.building_name}
     style={{ width: "300px", height: "250px", objectFit: "cover", borderRadius: "8px",border : "4px solid white" }}
   />

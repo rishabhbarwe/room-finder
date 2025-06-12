@@ -42,15 +42,19 @@ const Login = () => {
   //  let  Userdata = localStorage.getItem('Signupdata');
   //   Userdata = JSON.parse(Userdata);
 
-
+let errors = {};
 
   const validate = () => {
     let valid = true;
-    let errors = {};
+    
 
 
     if (!formData.username_or_email) {
       errors.username_or_email = "Please enter username or email";
+      valid = false;
+    }
+    if (!formData.password) {
+      errors.password = "Please enter password";
       valid = false;
     }
     // else{
@@ -81,10 +85,7 @@ const Login = () => {
    
     
 
-    if (!formData.password) {
-      errors.password = "Please enter password";
-      valid = false;
-    }
+    
     // else{
     //   if(formData.password !== Userdata.password ){
     //     errors.password = "Password is incorrect";
@@ -136,16 +137,19 @@ const Login = () => {
   } catch (error) {
     console.error("Login error:", error.response?.data);
 
-    const errors = {};
+   const data = error.response?.data;
 
-    if (error.response?.data?.username_or_email) {
-      errors.username_or_email = error.response.data.username_or_email[0];
+    if (data?.username_or_email) {
+      errors.username_or_email = "Username or email not found"; // Custom error
     }
-    if (error.response?.data?.password) {
-      errors.password = error.response.data.password[0];
+
+    if (data?.password) {
+      errors.password = "Incorrect password"; // Custom error
     }
-    if (error.response?.data?.non_field_errors) {
-      errors.password = error.response.data.non_field_errors[0]; // general auth error
+
+    if (data?.non_field_errors) {
+      // General login error like "Invalid credentials"
+      errors.password = data.non_field_errors[0]; // or your custom message
     }
 
     setError(errors);
@@ -204,6 +208,11 @@ const Login = () => {
 </div>
           <div className="loginForm">
             <h3 className="text-center mb-4">Welcome Back!</h3>
+             {error.password === "Invalid credentials" && (
+    <div className="alert alert-danger p-2 text-center "  role="alert">
+      {error.password}
+    </div>
+  )}
             <form>
               <div className="mb-3 position-relative">
                 <label htmlFor="username_or_email">Username or Email</label>
@@ -233,7 +242,7 @@ const Login = () => {
                   className="form-control"
                   style={{paddingLeft : 30}}
                 />
-                {error.password && <p className="errorsMessage">{error.password}</p>}
+                {error.password ==="Please enter password" && <p className="errorsMessage">{error.password}</p>}
                 <img src={lock} alt="" width={20} className="icons position-absolute" style={{ left: 10, top: 33 }} />
                 <img
                   src={showPass ? hidden : eye}

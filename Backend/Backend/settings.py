@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'corsheaders',
 
     'accounts',
+    'cloudinary',
+    'cloudinary_storage',
 ]
 
 # ---------------------
@@ -136,3 +138,21 @@ USE_I18N = True
 USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Media settings for Cloudinary
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
+
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.getenv('CLOUD_NAME'),
+    'API_KEY': os.getenv('API_KEY'),
+    'API_SECRET': os.getenv('API_SECRET'),
+}
+
+
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'

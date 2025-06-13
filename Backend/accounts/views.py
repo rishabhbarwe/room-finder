@@ -67,7 +67,7 @@ class PropertyCreateView(APIView):
             'alt_email': request.data.get('alt_email'),
             'rent_from': request.data.get('rent_from'),
             'rent_to': request.data.get('rent_to'),
-            'building_image': request.FILES.get('building_image'),
+            
         }
 
         # Handle facilities
@@ -90,6 +90,9 @@ class PropertyCreateView(APIView):
                 continue
 
         data_dict['room_types'] = room_types
+
+        # 👇 Include files separately
+        files = {'building_image': request.FILES.get('building_image')}
 
         # Validate and save
         serializer = PropertySerializer(data=data_dict, context={'request': request})

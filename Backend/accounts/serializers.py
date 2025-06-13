@@ -61,7 +61,8 @@ class PropertySerializer(serializers.ModelSerializer):
     room_types = serializers.ListField(child=serializers.JSONField())
 
 
-    building_image = serializers.ImageField(required=False)
+    building_image = serializers.CharField(required=False, allow_blank=True)
+
 
     class Meta:
         model = Property

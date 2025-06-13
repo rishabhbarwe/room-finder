@@ -157,3 +157,7 @@ import cloudinary.api
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+
+print("CLOUDINARY_URL:", os.getenv("CLOUDINARY_URL"))
+

@@ -21,7 +21,7 @@ class Property(models.Model):
 
     building_name = models.CharField(max_length=255)
     owner_name = models.CharField(max_length=255,default="Unknown")
-    building_image = models.ImageField(upload_to='properties/', blank=True, null=True)
+    building_image = CloudinaryField('image', blank=True, null=True)
     address = models.TextField()
     city =   models.CharField(max_length=100)
     state  = models.CharField(max_length=100)

@@ -81,13 +81,19 @@ class PropertySerializer(serializers.ModelSerializer):
         return property_instance
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+
         if instance.building_image:
             try:
-            # This returns the full URL directly
-                representation['building_image'] = instance.building_image.url
-            except AttributeError:
-                representation['building_image'] = None
+                # CloudinaryField provides a build_url method with secure=True
+                  representation['building_image'] = instance.building_image.build_url(secure=True)
+            except Exception as e:
+                  print("Error getting secure_url:", str(e))
+                  representation['building_image'] = None
+        else:
+            representation['building_image'] = None
+
         return representation
+
 
 
 #-----------------------------------------------------------------------------------------
